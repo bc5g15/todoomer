@@ -161,45 +161,6 @@ const onMove = (mdl, start, destination) => {
   removeAtAddress(mdl, start);
   addAt(mdl, destination, n);
 };
-const root = document.body;
-const createNodeElement = (node, address) => {
-  const root = document.createElement("div");
-  const message = document.createElement("p");
-  message.innerText = (node.value ?? "") + address.join("/");
-  root.appendChild(message);
-  if (node.contents === undefined) {
-    root.className = "leaf";
-    return root;
-  }
-  root.className = "branch";
-  const container = document.createElement("div");
-  let i = 0;
-  let n = node.contents;
-  do {
-    const child = createNodeElement(n.value, [...address, i]);
-    container.append(child);
-    i++;
-    n = n.next;
-  } while (n !== undefined);
-  root.append(container);
-  return root;
-};
-const buildView = (root, model) => {
-  const rootDiv = document.createElement("div");
-  rootDiv.className = "root";
-  const children = model.contents;
-  if (children === undefined) {
-    return;
-  }
-  let i = 0;
-  let current = children;
-  do {
-    rootDiv.append(createNodeElement(current.value, [i]));
-    current = current.next;
-    i++;
-  } while (current !== undefined);
-  root.append(rootDiv);
-};
 const testModel = {
   value: undefined,
   contents: {
@@ -240,7 +201,65 @@ const testModel = {
     }
   }
 };
-buildView(document.body, testModel);
+const createNodeElement = (node, address) => {
+  const root = document.createElement("div");
+  const message = document.createElement("p");
+  message.innerText = (node.value ?? "") + address.join("/");
+  root.appendChild(message);
+  if (node.contents === undefined) {
+    root.className = "leaf";
+    return root;
+  }
+  root.className = "branch";
+  const container = document.createElement("div");
+  let i = 0;
+  let n = node.contents;
+  do {
+    const child = createNodeElement(n.value, [...address, i]);
+    container.append(child);
+    i++;
+    n = n.next;
+  } while (n !== undefined);
+  root.append(container);
+  return root;
+};
+let currentRoot = undefined;
+let currentModel = testModel;
+let update = () => {
+  if (currentRoot) {
+    document.body.removeChild(currentRoot);
+  }
+  currentRoot = buildView(currentModel);
+  if (currentRoot) {
+    document.body.appendChild(currentRoot);
+  }
+};
+const buildView = (model) => {
+  const rootDiv = document.createElement("div");
+  rootDiv.className = "root";
+  const children = model.contents;
+  if (children === undefined) {
+    return;
+  }
+  let i = 0;
+  let current = children;
+  do {
+    rootDiv.append(createNodeElement(current.value, [i]));
+    current = current.next;
+    i++;
+  } while (current !== undefined);
+  const addColumn = (s) => {
+    appendItem(model, {
+      value: s,
+      contents: undefined
+    });
+    update();
+  };
+  const columnAddButton = promiseTextButton(addColumn);
+  rootDiv.append(columnAddButton);
+  return rootDiv;
+};
+update();
 const addButton = document.createElement("button");
 addButton.textContent = "This is a test";
 const addZone = document.createElement("div");

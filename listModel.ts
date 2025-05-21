@@ -184,68 +184,6 @@ const onMove = (mdl: Node, start: Address, destination: Address) => {
     addAt(mdl, destination, n);
 }
 
-// const onAddColumn = (mdl: Model, name: string) => {
-//     mdl.push({
-//         name,
-//         contents: []
-//     });
-// }
-
-// const onAddItem = (mdl: Model, name: string, item: Item) => {
-//     const column = mdl.find(c => c.name === name);
-//     if (!column) { 
-//         return;
-//     }
-//     column.contents.push(item);
-// }
-
-// const onMoveItem = (mdl: Model, startName: string, startIndex: )
-
-const root = document.body;
-
-const createNodeElement = (node: Node, address: Address): HTMLElement => {
-    const root = document.createElement('div');
-    const message = document.createElement('p');
-    message.innerText = (node.value ?? '') + address.join('/');
-    root.appendChild(message)
-    if (node.contents === undefined) {
-        root.className = 'leaf';
-        // Leaf node, nothing more needs be done
-        return root;
-    }
-    root.className = 'branch';
-    const container = document.createElement('div');
-    let i = 0;
-    let n: LinkedList<Node> | undefined = node.contents;
-    do {
-        const child = createNodeElement(n.value, [...address, i])
-        container.append(child);
-        i++;
-        n = n.next;
-    } while (n !== undefined);
-    root.append(container);
-    return root;
-}
-
-const buildView = (root: HTMLElement, model: Node) => {
-    // We don't care about the top level value, it is always just going to be for the children
-    const rootDiv = document.createElement('div');
-    rootDiv.className = 'root';
-    const children = model.contents;
-    if (children === undefined) {
-        // No children, can't do anything
-        return;
-    }
-
-    let i = 0;
-    let current: LinkedList<Node> | undefined = children;
-    do {
-        rootDiv.append(createNodeElement(current.value, [i]))
-        current = current.next;
-        i++;
-    } while (current !== undefined)
-    root.append(rootDiv);
-};
 
 const testModel: Node = {
     value: undefined,
@@ -288,7 +226,98 @@ const testModel: Node = {
     }
 }
 
-buildView(document.body, testModel);
+// const onAddColumn = (mdl: Model, name: string) => {
+//     mdl.push({
+//         name,
+//         contents: []
+//     });
+// }
+
+// const onAddItem = (mdl: Model, name: string, item: Item) => {
+//     const column = mdl.find(c => c.name === name);
+//     if (!column) { 
+//         return;
+//     }
+//     column.contents.push(item);
+// }
+
+// const onMoveItem = (mdl: Model, startName: string, startIndex: )
+
+// const root = document.body;
+
+const createNodeElement = (node: Node, address: Address): HTMLElement => {
+    const root = document.createElement('div');
+    const message = document.createElement('p');
+    message.innerText = (node.value ?? '') + address.join('/');
+    root.appendChild(message)
+    if (node.contents === undefined) {
+        root.className = 'leaf';
+        // Leaf node, nothing more needs be done
+        return root;
+    }
+    root.className = 'branch';
+    const container = document.createElement('div');
+    let i = 0;
+    let n: LinkedList<Node> | undefined = node.contents;
+    do {
+        const child = createNodeElement(n.value, [...address, i])
+        container.append(child);
+        i++;
+        n = n.next;
+    } while (n !== undefined);
+    root.append(container);
+    return root;
+}
+
+let currentRoot: HTMLElement | undefined = undefined;
+let currentModel = testModel;
+let update = () => {
+    if (currentRoot) {
+        document.body.removeChild(currentRoot);
+    }
+    currentRoot = buildView(currentModel);
+    if (currentRoot) {
+        document.body.appendChild(currentRoot);
+    }
+}
+
+const buildView = (model: Node) => {
+    // We don't care about the top level value, it is always just going to be for the children
+    const rootDiv = document.createElement('div');
+    rootDiv.className = 'root';
+    const children = model.contents;
+    if (children === undefined) {
+        // No children, can't do anything
+        return;
+    }
+
+    let i = 0;
+    let current: LinkedList<Node> | undefined = children;
+    do {
+        rootDiv.append(createNodeElement(current.value, [i]))
+        current = current.next;
+        i++;
+    } while (current !== undefined)
+
+    // Don't forget the add column button!
+    const addColumn = (s: string) => {
+        appendItem(model, {
+            value: s,
+            contents: undefined
+        });
+        // Might want a better update function than this?
+        // buildView(model);
+        update();
+    }
+    const columnAddButton = promiseTextButton(addColumn);
+    rootDiv.append(columnAddButton);
+    return rootDiv;
+    // root.append(rootDiv);
+};
+
+
+// buildView(document.body, testModel);
+update();
 
 const addButton = document.createElement('button');
 addButton.textContent = 'This is a test';
