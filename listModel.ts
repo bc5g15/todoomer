@@ -336,6 +336,48 @@ let update = () => {
     }
 }
 
+const createDragZone = (address: Address) => {
+    const dragZone = document.createElement('div');
+    dragZone.classList.add('dropZone');
+    // dragZone.style.width = '1em';
+    dragZone.style.outline = '1px dashed red';
+    dragZone.ondragenter = (ev) => {
+        ev.preventDefault();
+        dragZone.classList.add('dropZoneSelected')
+    }
+    dragZone.ondragend = () => {
+        const dropZones = document.getElementsByClassName('dropZone');
+        for (let i = 0; i < dropZones.length; i++) {
+            dropZones[i].classList.remove('dropZonePotential');
+            dropZones[i].classList.remove('dropZoneSelected');
+        }
+    };
+    dragZone.ondragleave = (ev) => {
+        ev.preventDefault();
+        dragZone.classList.remove('dropZoneSelected');
+        dragZone.classList.add('dropZonePotential')
+    }
+    dragZone.ondragover = (ev) => {
+        ev.preventDefault();
+        ev.dataTransfer!.dropEffect = 'move';
+    }
+    dragZone.ondrop = (ev) => {
+        const d = ev.dataTransfer?.getData('text/plain');
+        console.log('Trying to move!', d, address);
+        if(!d) return;
+        console.log('Should be moving1');
+        const startAddress: Address = JSON.parse(d);
+        onMove(currentModel, startAddress, address);
+        const dropZones = document.getElementsByClassName('dropZone');
+        for (let i = 0; i < dropZones.length; i++) {
+            dropZones[i].classList.remove('dropZonePotential');
+            dropZones[i].classList.remove('dropZoneSelected');
+        }
+        update();
+    }
+    return dragZone;
+} 
+
 const createNodeElement = (node: Node, address: Address): HTMLElement => {
     const root = document.createElement('div');
     root.draggable = true;
@@ -356,7 +398,10 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     root.appendChild(message)
     if (node.contents.next === undefined) {
         root.className = 'leaf';
-        // Leaf node, nothing more needs be done
+        // Leaf node, create drag zone that would turn this into a branch
+        const dragZone = createDragZone([...address, 0]);
+        dragZone.style.height = '1em';
+        root.append(dragZone);
         return root;
     }
     root.className = 'branch';
@@ -364,7 +409,9 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     let i = 0;
     let n: LinkedList<Node> | undefined = node.contents.next;
     do {
-        
+        const dragZone = createDragZone([...address, i]);
+        dragZone.style.height = '1em';
+        container.append(dragZone);
         const child = createNodeElement(n.value, [...address, i])
         container.append(child);
         i++;
@@ -385,40 +432,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     return root;
 }
 
-const createDragZone = (address: Address) => {
-    const columnDragZone = document.createElement('div');
-    columnDragZone.classList.add('dropZone');
-    columnDragZone.style.width = '1em';
-    columnDragZone.style.outline = '1px dashed red';
-    columnDragZone.ondragenter = (ev) => {
-        ev.preventDefault();
-        columnDragZone.classList.add('dropZoneSelected')
-    }
-    columnDragZone.ondragleave = (ev) => {
-        ev.preventDefault();
-        columnDragZone.classList.remove('dropZoneSelected');
-        columnDragZone.classList.add('dropZonePotential')
-    }
-    columnDragZone.ondragover = (ev) => {
-        ev.preventDefault();
-        ev.dataTransfer!.dropEffect = 'move';
-    }
-    columnDragZone.ondrop = (ev) => {
-        const d = ev.dataTransfer?.getData('text/plain');
-        console.log('Trying to move!', d, address);
-        if(!d) return;
-        console.log('Should be moving1');
-        const startAddress: Address = JSON.parse(d);
-        onMove(currentModel, startAddress, address);
-        const dropZones = document.getElementsByClassName('dropZone');
-        for (let i = 0; i < dropZones.length; i++) {
-            dropZones[i].classList.remove('dropZonePotential');
-            dropZones[i].classList.remove('dropZoneSelected');
-        }
-        update();
-    }
-    return columnDragZone;
-} 
+
 
 const buildView = (model: Node) => {
     // We don't care about the top level value, it is always just going to be for the children
@@ -435,6 +449,7 @@ const buildView = (model: Node) => {
     do {
         // Add drag zones for the elements... 
         const columnDragZone = createDragZone([i]);
+        columnDragZone.style.width = '1em';
         rootDiv.append(columnDragZone);
 
         rootDiv.append(createNodeElement(current.value, [i]))
