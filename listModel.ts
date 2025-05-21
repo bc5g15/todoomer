@@ -1,34 +1,48 @@
-const promiseText = (root: HTMLElement, defaultString = '') => new Promise<string>(res => {
+const promiseText = (defaultString = ''): [HTMLElement, Promise<string>] => {
     // Create a special text form and add myself to the root
     const magicForm = document.createElement('form');
     const textInput = document.createElement('input');
     magicForm.append(textInput);
-    root.append(magicForm);
     textInput.value = defaultString;
-    textInput.focus();
 
-    const submit = () => {
-        const textResult = textInput.value;
-        root.removeChild(magicForm);
-        res(textResult);
-    }
+    const p = new Promise<string>(res => {
+        const submit = () => {
+            const textResult = textInput.value;
+            res(textResult);
+        }
+        magicForm.onsubmit = submit;
+        textInput.onblur = submit;
+    })
 
-    magicForm.onsubmit = submit;
-    textInput.onblur = submit;
-});
+    return [magicForm, p];
+}
 
 const promiseTextButton = (handleText: (s: string) => void) => {
     const btn = document.createElement('button');
     btn.textContent = '+';
     btn.onclick = async () => {
-        const parent = btn.parentElement;
-        if (!parent) return;
-        parent?.removeChild(btn);
-        const result = await promiseText(parent);
+        const [form, promise] = promiseText();
+        btn.replaceWith(form);
+        const result = await promise;
         handleText(result);
-        parent.appendChild(btn);
+        form.replaceWith(btn);
     }
     return btn;
+}
+
+const promiseTextDisplay = (textValue: string, handleText: (s: string) => void) => {
+    const para = document.createElement('p');
+    para.innerText = textValue;
+    para.className = 'editableText';
+    para.onclick = async () => {
+        const [form, promise] = await promiseText();
+        para.replaceWith(form);
+        const result = await promise;
+        handleText(result);
+        para.innerText = result;
+        form.replaceWith(para);
+    }
+    return para;
 }
 
 // type Item = Column | {
@@ -120,7 +134,6 @@ const appendItem = (node: Node, item: Node) => {
     };
 }
 
-
 const findByAddress = (mdl: Node, address: Address): Node | undefined => {
     if (address.length === 0 || mdl.contents === undefined) {
         return mdl; 
@@ -132,6 +145,12 @@ const findByAddress = (mdl: Node, address: Address): Node | undefined => {
         node = findByIndex(node.contents, add);
     }
     return node;
+}
+
+const editValueAtAddress = (mdl: Node, address: Address, value: NodeValue) => {
+    const node = findByAddress(mdl, address);
+    if (!node) return;
+    node.value = value;
 }
 
 // const findContentsByAddress = (mdl: Model, address: Address): Node[] | undefined => {
@@ -261,8 +280,10 @@ let update = () => {
 
 const createNodeElement = (node: Node, address: Address): HTMLElement => {
     const root = document.createElement('div');
-    const message = document.createElement('p');
-    message.innerText = (node.value ?? '') + address.join('/');
+    const message = promiseTextDisplay((node.value ?? '') + address.join('/'), (s) => {
+        node.value = s;
+    })
+    // message.innerText = (node.value ?? '') + address.join('/');
     root.appendChild(message)
     if (node.contents === undefined) {
         root.className = 'leaf';

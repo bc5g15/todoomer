@@ -21,34 +21,46 @@
     </head>
     <body></body>
     <script>
-        const promiseText = (root, defaultString = "") => new Promise((res) => {
+        const promiseText = (defaultString = "") => {
   const magicForm = document.createElement("form");
   const textInput = document.createElement("input");
   magicForm.append(textInput);
-  root.append(magicForm);
   textInput.value = defaultString;
-  textInput.focus();
-  const submit = () => {
-    const textResult = textInput.value;
-    root.removeChild(magicForm);
-    res(textResult);
-  };
-  magicForm.onsubmit = submit;
-  textInput.onblur = submit;
-});
+  const p = new Promise((res) => {
+    const submit = () => {
+      const textResult = textInput.value;
+      res(textResult);
+    };
+    magicForm.onsubmit = submit;
+    textInput.onblur = submit;
+  });
+  return [magicForm, p];
+};
 const promiseTextButton = (handleText) => {
   const btn = document.createElement("button");
   btn.textContent = "+";
   btn.onclick = async () => {
-    const parent = btn.parentElement;
-    if (!parent)
-      return;
-    parent?.removeChild(btn);
-    const result = await promiseText(parent);
+    const [form, promise] = promiseText();
+    btn.replaceWith(form);
+    const result = await promise;
     handleText(result);
-    parent.appendChild(btn);
+    form.replaceWith(btn);
   };
   return btn;
+};
+const promiseTextDisplay = (textValue, handleText) => {
+  const para = document.createElement("p");
+  para.innerText = textValue;
+  para.className = "editableText";
+  para.onclick = async () => {
+    const [form, promise] = await promiseText();
+    para.replaceWith(form);
+    const result = await promise;
+    handleText(result);
+    para.innerText = result;
+    form.replaceWith(para);
+  };
+  return para;
 };
 const model = {
   value: undefined,
@@ -122,6 +134,12 @@ const findByAddress = (mdl, address) => {
     node = findByIndex(node.contents, add);
   }
   return node;
+};
+const editValueAtAddress = (mdl, address, value) => {
+  const node = findByAddress(mdl, address);
+  if (!node)
+    return;
+  node.value = value;
 };
 const removeAtAddress = (mdl, address) => {
   const parent = address.slice(0, -1);
@@ -214,8 +232,9 @@ let update = () => {
 };
 const createNodeElement = (node, address) => {
   const root = document.createElement("div");
-  const message = document.createElement("p");
-  message.innerText = (node.value ?? "") + address.join("/");
+  const message = promiseTextDisplay((node.value ?? "") + address.join("/"), (s) => {
+    node.value = s;
+  });
   root.appendChild(message);
   if (node.contents === undefined) {
     root.className = "leaf";
