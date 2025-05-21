@@ -234,51 +234,6 @@ const onMove = (mdl: Node, start: Address, destination: Address) => {
     }
 }
 
-
-// const testModel: Node = {
-//     value: undefined,
-//     contents: {
-//         startType: true,
-//         next: {
-//             value: {
-//                 value: 'First Column',
-//                 contents: { startType: true, next: {
-//                     value: {
-//                         value: 'First Leaf',
-//                         contents: { startType: true, next: undefined}
-//                     },
-//                     next: undefined
-//                 }}
-//             },
-//             next: {
-//                 value: {
-//                     value: 'Second Column',
-//                     contents: { startType: true, next: {
-//                         value: {
-//                             value: 'Second Node',
-//                             contents: {startType: true, next: {
-//                                 value: {
-//                                     value: 'First Inner Node',
-//                                     contents: {startType: true, next: undefined}
-//                                 },
-//                                 next: {
-//                                     value: {
-//                                         value: 'Second Inner Node',
-//                                         contents: {startType: true, next: undefined}
-//                                     },
-//                                     next: undefined
-//                                 }
-//                                 }}
-//                             },
-//                         next: undefined
-//                         }}
-//                     },
-//                     next: undefined
-//                 },
-//             }
-//         }
-//     }
-
 const MODEL_KEY = 'tmdr-model'
 
 let currentRoot: HTMLElement | undefined = undefined;
