@@ -61,36 +61,39 @@ type NodeValue = string | undefined
 
 type Node = {
     value: NodeValue;
-    contents: LinkedList<Node> | undefined;
+    contents: StartNode<Node>;
 }
 
 // type Model = Node[];
 
 type Address = number[];
 
+type StartNode<a> = {
+    startType: true;
+    next: LinkedList<a> | undefined;
+}
+
 type LinkedList<a> = {
     value: a;
     next: LinkedList<a> | undefined;
 } 
 
-const model: Node = {
-    value: undefined,
-    contents: undefined
-};
+type ListItem<a> = LinkedList<a> | StartNode<a>
 
-const findByIndex = <a>(lst: LinkedList<a>, index: number) => {
-    let r = lst;
+const findByIndex = <a>(lst: StartNode<a>, index: number) => {
+    let r = lst.next;
+    if (!r) return undefined;
     while (index > 0) {
         index--;
-        if (!r.next) return undefined;
+        if (!r?.next) return undefined;
         r = r.next;
     }
     return r.value;
 }
 
-const removeAt = <a>(lst: LinkedList<a>, index: number) => {
-    let r = lst; 
-    while (index > 1) {
+const removeAt = <a>(lst: StartNode<a>, index: number) => {
+    let r: ListItem<a> = lst; 
+    while (index > 0) {
         index--;
         if (!r.next) return;
         r = r.next;
@@ -98,8 +101,8 @@ const removeAt = <a>(lst: LinkedList<a>, index: number) => {
     r.next = r.next?.next ?? undefined;
 }
 
-const insertAt = <a>(lst: LinkedList<a>, index: number, item: a) => {
-    let r = lst; 
+const insertAt = <a>(lst: StartNode<a>, index: number, item: a) => {
+    let r: ListItem<a> = lst; 
     while (index > 0) {
         index--;
         if (!r.next) {
@@ -119,11 +122,14 @@ const insertAt = <a>(lst: LinkedList<a>, index: number, item: a) => {
 }
 
 const appendItem = (node: Node, item: Node) => {
-    let r = node.contents;
+    let r: ListItem<Node> = node.contents;
     if (r === undefined) {
         node.contents = {
-            value: item,
-            next: undefined
+            startType: true,
+            next: {
+                value: item,
+                next: undefined
+            }
         }
         return;
     }
@@ -176,98 +182,154 @@ const removeAtAddress = (mdl: Node, address: Address) => {
     const parent = address.slice(0, -1);
     const index = address[address.length-1];
     const n = findByAddress(mdl, parent);
-    console.log('parent', n, index);
+    console.log('removing', n, index);
     if (!n) return;
-    if (!n.contents) {
-        return;
-    };
-    if (n.contents.next === undefined) {
-        // remove the singleton element
-        n.contents = undefined;
-        return;
-    }
     removeAt(n.contents, index);
 }
 
-const appendAtAddress = (mdl: Node, address: Address, value: string) => {
-    const n = findByAddress(mdl, address);
-    if (!n) return; // Bad address
-    appendItem(n, { value, contents: undefined});
-}
+// const appendAtAddress = (mdl: Node, address: Address, value: string) => {
+//     const n = findByAddress(mdl, address);
+//     if (!n) return; // Bad address
+//     appendItem(n, { value, contents: undefined});
+// }
 
 const addAt = (mdl: Node, address: Address, node: Node) => {
     const parent = address.slice(0, -1);
     const index = address[address.length-1];
     const n = findByAddress(mdl, parent);
+    console.log('adding', index, n);
     if (!n) return;
-    if (!n.contents) {
-        n.contents = {
-            value: node,
-            next: undefined
-        };
-        return;
-    }
-    if (index === 0) {
-        n.contents = {
-            value: node,
-            next: n.contents
-        }
-        return;
-    }
+    // if (!n.contents) {
+    //     n.contents = {
+    //         value: node,
+    //         next: undefined
+    //     };
+    //     return;
+    // }
+    // if (index === 0) {
+    //     n.contents = {
+    //         value: node,
+    //         next: n.contents
+    //     }
+    //     return;
+    // }
     insertAt(n.contents, index, node);
 }
 
+// const compareAddress = (add1: Address, add2: Address) => {
+//     const a1 = [...add1];
+//     const a2 = [...add2];
+//     while (true) {
+//         let a = a1.shift();
+//         let b = a2.shift();
+//         if (a === b) continue;
+//         if (a === undefined) {
+//             return -1
+//         }
+//         if (a > b)
+//     }
+// }
+
 const onMove = (mdl: Node, start: Address, destination: Address) => {
     const n = findByAddress(mdl, start);
-    console.log(start, destination, n);
+    console.log('moving', start, destination, n);
     // console.log(mdl);
     if (!n) return; // Bad address
+    // The order of these operations depends on the cardinality of the addresses
+    // Can't just do them in a fixed order! 
+    // Or can I? 
     removeAtAddress(mdl, start);
-    addAt(mdl, destination, n);
     console.log(mdl);
+    addAt(mdl, destination, n);
 }
 
+
+// const testModel: Node = {
+//     value: undefined,
+//     contents: {
+//         value: {
+//             value: 'First Column',
+//             contents: {
+//                 value: {
+//                     value: 'First Leaf',
+//                     contents: undefined
+//                 },
+//                 next: undefined
+//             }
+//         },
+//         next: {
+//                     value: {
+//                         value: 'Second Column',
+//                         contents: {
+//                             value: {
+                                
+//                                 value: 'Second Node',
+//                                 contents: {
+//                                     value: {
+//                                         value: 'Inner Node',
+//                                         contents: undefined
+//                                     },
+//                                     next: {
+//                                         value: {
+//                                             value: 'Second Inner Node',
+//                                             contents: undefined
+//                                         },
+//                                         next: undefined
+//                                     }
+//                                 }
+//                             },
+//                             next: undefined
+//                         }
+//                     },
+//                     next: undefined
+//                 }
+//     }
+// }
 
 const testModel: Node = {
     value: undefined,
     contents: {
-        value: {
-            value: 'First Column',
-            contents: {
-                value: {
-                    value: 'First Leaf',
-                    contents: undefined
-                },
-                next: undefined
-            }
-        },
+        startType: true,
         next: {
+            value: {
+                value: 'First Column',
+                contents: { startType: true, next: {
                     value: {
-                        value: 'Second Column',
-                        contents: {
-                            value: {
-                                value: 'Second Node',
-                                contents: {
-                                    value: {
-                                        value: 'Inner Node',
-                                        contents: undefined
-                                    },
-                                    next: {
-                                        value: {
-                                            value: 'Second Inner Node',
-                                            contents: undefined
-                                        },
-                                        next: undefined
-                                    }
-                                }
-                            },
-                            next: undefined
-                        }
+                        value: 'First Leaf',
+                        contents: { startType: true, next: undefined}
                     },
                     next: undefined
-                }
+                }}
+            },
+            next: {
+                value: {
+                    value: 'Second Column',
+                    contents: { startType: true, next: {
+                        value: {
+                            value: 'Second Node',
+                            contents: {startType: true, next: {
+                                value: {
+                                    value: 'First Inner Node',
+                                    contents: {startType: true, next: undefined}
+                                },
+                                next: {
+                                    value: {
+                                        value: 'Second Inner Node',
+                                        contents: {startType: true, next: undefined}
+                                    },
+                                    next: undefined
+                                }
+                                }}
+                            },
+                        next: undefined
+                        }}
+                    },
+                    next: undefined
+                },
+            }
+        }
     }
-}
+
 
 // const onAddColumn = (mdl: Model, name: string) => {
 //     mdl.push({
@@ -320,7 +382,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     })
     // message.innerText = (node.value ?? '') + address.join('/');
     root.appendChild(message)
-    if (node.contents === undefined) {
+    if (node.contents.next === undefined) {
         root.className = 'leaf';
         // Leaf node, nothing more needs be done
         return root;
@@ -328,8 +390,9 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     root.className = 'branch';
     const container = document.createElement('div');
     let i = 0;
-    let n: LinkedList<Node> | undefined = node.contents;
+    let n: LinkedList<Node> | undefined = node.contents.next;
     do {
+        
         const child = createNodeElement(n.value, [...address, i])
         container.append(child);
         i++;
@@ -341,7 +404,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     const addElement = (s: string) => {
         appendItem(node, {
             value: s,
-            contents: undefined
+            contents: {startType: true, next: undefined}
         });
         update();
     }
@@ -390,13 +453,13 @@ const buildView = (model: Node) => {
     const rootDiv = document.createElement('div');
     rootDiv.className = 'root';
     const children = model.contents;
-    if (children === undefined) {
+    if (children.next === undefined) {
         // No children, can't do anything
         return;
     }
 
     let i = 0;
-    let current: LinkedList<Node> | undefined = children;
+    let current: LinkedList<Node> | undefined = children.next;
     do {
         // Add drag zones for the elements... 
         const columnDragZone = createDragZone([i]);
@@ -407,6 +470,9 @@ const buildView = (model: Node) => {
         i++;
     } while (current !== undefined)
 
+    const columnDragZone = createDragZone([i]);
+    rootDiv.append(columnDragZone);
+
     // Don't forget the add column button!
     const addColumn = (s: string) => {
         // Make it a column with a default box inside of it. 
@@ -414,11 +480,14 @@ const buildView = (model: Node) => {
         appendItem(model, {
             value: s,
             contents: {
-                value: {
-                    value: 'Blank',
-                    contents: undefined
-                },
-                next: undefined
+                startType: true,
+                next: {
+                    value: {
+                        value: 'Blank',
+                        contents: {startType: true, next: undefined}
+                    },
+                    next: undefined
+                }
             }
         });
         update();

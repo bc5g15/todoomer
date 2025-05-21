@@ -77,15 +77,13 @@ const promiseTextDisplay = (textValue, handleText) => {
   };
   return para;
 };
-const model = {
-  value: undefined,
-  contents: undefined
-};
 const findByIndex = (lst, index) => {
-  let r = lst;
+  let r = lst.next;
+  if (!r)
+    return;
   while (index > 0) {
     index--;
-    if (!r.next)
+    if (!r?.next)
       return;
     r = r.next;
   }
@@ -93,7 +91,7 @@ const findByIndex = (lst, index) => {
 };
 const removeAt = (lst, index) => {
   let r = lst;
-  while (index > 1) {
+  while (index > 0) {
     index--;
     if (!r.next)
       return;
@@ -124,8 +122,11 @@ const appendItem = (node, item) => {
   let r = node.contents;
   if (r === undefined) {
     node.contents = {
-      value: item,
-      next: undefined
+      startType: true,
+      next: {
+        value: item,
+        next: undefined
+      }
     };
     return;
   }
@@ -163,92 +164,69 @@ const removeAtAddress = (mdl, address) => {
   const parent = address.slice(0, -1);
   const index = address[address.length - 1];
   const n = findByAddress(mdl, parent);
-  console.log("parent", n, index);
+  console.log("removing", n, index);
   if (!n)
     return;
-  if (!n.contents) {
-    return;
-  }
-  if (n.contents.next === undefined) {
-    n.contents = undefined;
-    return;
-  }
   removeAt(n.contents, index);
-};
-const appendAtAddress = (mdl, address, value) => {
-  const n = findByAddress(mdl, address);
-  if (!n)
-    return;
-  appendItem(n, { value, contents: undefined });
 };
 const addAt = (mdl, address, node) => {
   const parent = address.slice(0, -1);
   const index = address[address.length - 1];
   const n = findByAddress(mdl, parent);
+  console.log("adding", index, n);
   if (!n)
     return;
-  if (!n.contents) {
-    n.contents = {
-      value: node,
-      next: undefined
-    };
-    return;
-  }
-  if (index === 0) {
-    n.contents = {
-      value: node,
-      next: n.contents
-    };
-    return;
-  }
   insertAt(n.contents, index, node);
 };
 const onMove = (mdl, start, destination) => {
   const n = findByAddress(mdl, start);
-  console.log(start, destination, n);
+  console.log("moving", start, destination, n);
   if (!n)
     return;
   removeAtAddress(mdl, start);
-  addAt(mdl, destination, n);
   console.log(mdl);
+  addAt(mdl, destination, n);
 };
 const testModel = {
   value: undefined,
   contents: {
-    value: {
-      value: "First Column",
-      contents: {
+    startType: true,
+    next: {
+      value: {
+        value: "First Column",
+        contents: { startType: true, next: {
+          value: {
+            value: "First Leaf",
+            contents: { startType: true, next: undefined }
+          },
+          next: undefined
+        } }
+      },
+      next: {
         value: {
-          value: "First Leaf",
-          contents: undefined
+          value: "Second Column",
+          contents: { startType: true, next: {
+            value: {
+              value: "Second Node",
+              contents: { startType: true, next: {
+                value: {
+                  value: "First Inner Node",
+                  contents: { startType: true, next: undefined }
+                },
+                next: {
+                  value: {
+                    value: "Second Inner Node",
+                    contents: { startType: true, next: undefined }
+                  },
+                  next: undefined
+                }
+              } }
+            },
+            next: undefined
+          } }
         },
         next: undefined
       }
-    },
-    next: {
-      value: {
-        value: "Second Column",
-        contents: {
-          value: {
-            value: "Second Node",
-            contents: {
-              value: {
-                value: "Inner Node",
-                contents: undefined
-              },
-              next: {
-                value: {
-                  value: "Second Inner Node",
-                  contents: undefined
-                },
-                next: undefined
-              }
-            }
-          },
-          next: undefined
-        }
-      },
-      next: undefined
     }
   }
 };
@@ -279,14 +257,14 @@ const createNodeElement = (node, address) => {
     node.value = s;
   });
   root.appendChild(message);
-  if (node.contents === undefined) {
+  if (node.contents.next === undefined) {
     root.className = "leaf";
     return root;
   }
   root.className = "branch";
   const container = document.createElement("div");
   let i = 0;
-  let n = node.contents;
+  let n = node.contents.next;
   do {
     const child = createNodeElement(n.value, [...address, i]);
     container.append(child);
@@ -297,7 +275,7 @@ const createNodeElement = (node, address) => {
   const addElement = (s) => {
     appendItem(node, {
       value: s,
-      contents: undefined
+      contents: { startType: true, next: undefined }
     });
     update();
   };
@@ -344,11 +322,11 @@ const buildView = (model) => {
   const rootDiv = document.createElement("div");
   rootDiv.className = "root";
   const children = model.contents;
-  if (children === undefined) {
+  if (children.next === undefined) {
     return;
   }
   let i = 0;
-  let current = children;
+  let current = children.next;
   do {
     const columnDragZone = createDragZone([i]);
     rootDiv.append(columnDragZone);
@@ -356,15 +334,20 @@ const buildView = (model) => {
     current = current.next;
     i++;
   } while (current !== undefined);
+  const columnDragZone = createDragZone([i]);
+  rootDiv.append(columnDragZone);
   const addColumn = (s) => {
     appendItem(model, {
       value: s,
       contents: {
-        value: {
-          value: "Blank",
-          contents: undefined
-        },
-        next: undefined
+        startType: true,
+        next: {
+          value: {
+            value: "Blank",
+            contents: { startType: true, next: undefined }
+          },
+          next: undefined
+        }
       }
     });
     update();
