@@ -1,3 +1,5 @@
+let editingText = false;
+
 const promiseText = (defaultString = ''): [HTMLElement, Promise<string>, () => void] => {
     // Create a special text form and add myself to the root
     const magicForm = document.createElement('form');
@@ -6,9 +8,11 @@ const promiseText = (defaultString = ''): [HTMLElement, Promise<string>, () => v
     textInput.className = 'dynamicText';
     magicForm.append(textInput);
     textInput.value = defaultString;
+    editingText = true;
 
     const p = new Promise<string>(res => {
         const submit = () => {
+            editingText = false;
             const textResult = textInput.value || defaultString;
             res(textResult);
         }
@@ -296,7 +300,7 @@ const createDragZone = (address: Address) => {
 let selectedNode: Address | undefined = undefined; 
 
 document.onkeyup = (ev) => {
-    if (ev.code === 'Delete' || ev.code === 'Backspace') {
+    if (!editingText && ev.code === 'Delete') {
         if (selectedNode) {
             removeAtAddress(currentModel, selectedNode);
             update();
