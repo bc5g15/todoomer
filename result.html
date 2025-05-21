@@ -201,6 +201,17 @@ const testModel = {
     }
   }
 };
+let currentRoot = undefined;
+let currentModel = testModel;
+let update = () => {
+  if (currentRoot) {
+    document.body.removeChild(currentRoot);
+  }
+  currentRoot = buildView(currentModel);
+  if (currentRoot) {
+    document.body.appendChild(currentRoot);
+  }
+};
 const createNodeElement = (node, address) => {
   const root = document.createElement("div");
   const message = document.createElement("p");
@@ -221,18 +232,16 @@ const createNodeElement = (node, address) => {
     n = n.next;
   } while (n !== undefined);
   root.append(container);
+  const addElement = (s) => {
+    appendItem(node, {
+      value: s,
+      contents: undefined
+    });
+    update();
+  };
+  const elementAddButton = promiseTextButton(addElement);
+  root.append(elementAddButton);
   return root;
-};
-let currentRoot = undefined;
-let currentModel = testModel;
-let update = () => {
-  if (currentRoot) {
-    document.body.removeChild(currentRoot);
-  }
-  currentRoot = buildView(currentModel);
-  if (currentRoot) {
-    document.body.appendChild(currentRoot);
-  }
 };
 const buildView = (model) => {
   const rootDiv = document.createElement("div");

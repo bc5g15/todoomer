@@ -245,6 +245,20 @@ const testModel: Node = {
 
 // const root = document.body;
 
+
+
+let currentRoot: HTMLElement | undefined = undefined;
+let currentModel = testModel;
+let update = () => {
+    if (currentRoot) {
+        document.body.removeChild(currentRoot);
+    }
+    currentRoot = buildView(currentModel);
+    if (currentRoot) {
+        document.body.appendChild(currentRoot);
+    }
+}
+
 const createNodeElement = (node: Node, address: Address): HTMLElement => {
     const root = document.createElement('div');
     const message = document.createElement('p');
@@ -266,19 +280,18 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
         n = n.next;
     } while (n !== undefined);
     root.append(container);
-    return root;
-}
 
-let currentRoot: HTMLElement | undefined = undefined;
-let currentModel = testModel;
-let update = () => {
-    if (currentRoot) {
-        document.body.removeChild(currentRoot);
+    // Add a button for inserting a new element to this column! 
+    const addElement = (s: string) => {
+        appendItem(node, {
+            value: s,
+            contents: undefined
+        });
+        update();
     }
-    currentRoot = buildView(currentModel);
-    if (currentRoot) {
-        document.body.appendChild(currentRoot);
-    }
+    const elementAddButton = promiseTextButton(addElement);
+    root.append(elementAddButton);
+    return root;
 }
 
 const buildView = (model: Node) => {
@@ -305,14 +318,11 @@ const buildView = (model: Node) => {
             value: s,
             contents: undefined
         });
-        // Might want a better update function than this?
-        // buildView(model);
         update();
     }
     const columnAddButton = promiseTextButton(addColumn);
     rootDiv.append(columnAddButton);
     return rootDiv;
-    // root.append(rootDiv);
 };
 
 
