@@ -48,23 +48,12 @@ const promiseTextDisplay = (textValue: string, handleText: (s: string) => void) 
     return para;
 }
 
-// type Item = Column | {
-//     value: string
-// }
-
-// type Column = {
-//     name: string;
-//     contents: Item[];
-// }
-
 type NodeValue = string | undefined
 
 type Node = {
     value: NodeValue;
     contents: StartNode<Node>;
 }
-
-// type Model = Node[];
 
 type Address = number[];
 
@@ -148,80 +137,41 @@ const findByAddress = (mdl: Node, address: Address): Node | undefined => {
         return mdl; 
     }
     const addressCopy = [...address];
-    console.log(addressCopy);
     let node: Node|undefined = findByIndex(mdl.contents, addressCopy.shift()!)
     while (addressCopy.length > 0) {
         if (!node || node.contents === undefined) return undefined; // Bad Address
         const add = addressCopy.shift()!;
         node = findByIndex(node.contents, add);
-        console.log(node);
     }
     return node;
 }
-
-const editValueAtAddress = (mdl: Node, address: Address, value: NodeValue) => {
-    const node = findByAddress(mdl, address);
-    if (!node) return;
-    node.value = value;
-}
-
-// const findContentsByAddress = (mdl: Model, address: Address): Node[] | undefined => {
-//     if (address.length === 0) {
-//         return mdl; 
-//     }
-//     let node: Node = mdl[address.shift()!];
-//     while (address.length > 0) {
-//         const add = address.unshift();
-//         node = node.contents[add];
-//         if (!node) return undefined; // Bad Address
-//     }
-//     return node.contents;
-// }
 
 const removeAtAddress = (mdl: Node, address: Address) => {
     const parent = address.slice(0, -1);
     const index = address[address.length-1];
     const n = findByAddress(mdl, parent);
-    console.log('removing', n, index);
     if (!n) return;
     removeAt(n.contents, index);
 }
-
-// const appendAtAddress = (mdl: Node, address: Address, value: string) => {
-//     const n = findByAddress(mdl, address);
-//     if (!n) return; // Bad address
-//     appendItem(n, { value, contents: undefined});
-// }
 
 const addAt = (mdl: Node, address: Address, node: Node) => {
     const parent = address.slice(0, -1);
     const index = address[address.length-1];
     const n = findByAddress(mdl, parent);
-    console.log('adding', index, n);
     if (!n) return;
-    // if (!n.contents) {
-    //     n.contents = {
-    //         value: node,
-    //         next: undefined
-    //     };
-    //     return;
-    // }
-    // if (index === 0) {
-    //     n.contents = {
-    //         value: node,
-    //         next: n.contents
-    //     }
-    //     return;
-    // }
     insertAt(n.contents, index, node);
 }
 
 const compareAddress = (add1: Address, add2: Address) => {
     const a1 = [...add1];
     const a2 = [...add2];
+    console.log(a1, a2);
     while (true) {
         let a = a1.shift();
         let b = a2.shift();
+        if (a === undefined && b === undefined) {
+            return 0;
+        }
         if (a === undefined) {
             return 1
         }
@@ -230,31 +180,58 @@ const compareAddress = (add1: Address, add2: Address) => {
         }
         if (a === b) continue;
         if (a < b) {
-            return -1;
+            return 1;
         }
         if (a > b) {
-            return 1;
+            return -1;
         }
         return 0;
     }
 }
 
+const isContainedBy = (start: Address, destination: Address) => {
+    const alst = [...start];
+    const blst = [...destination];
+    while (true) {
+        const a = alst.shift();
+        const b = blst.shift();
+        if (a === undefined && b === undefined) {
+            return true;
+        }
+        if (a === b) { 
+            continue;
+        }
+        if (a === undefined) {
+            // b is contained by A
+            return true;
+        }
+        return false;
+    }
+}
+
 const onMove = (mdl: Node, start: Address, destination: Address) => {
     const n = findByAddress(mdl, start);
-    console.log('moving', start, destination, n);
-    // console.log(mdl);
     if (!n) return; // Bad address
     // The order of these operations depends on the cardinality of the addresses
     // Can't just do them in a fixed order! 
     // Or can I? 
     const r = compareAddress(start, destination);
-    // if (r === -1) {
-    removeAtAddress(mdl, start);
-    addAt(mdl, destination, n);
-    // } else {
-    //     addAt(mdl, destination, n);
-    //     removeAtAddress(mdl, start);
-    // }
+    if (isContainedBy(start, destination)) {
+        // One is inside the other, don't do anything!
+        return;
+    }
+    console.log(r);
+    if (r === 0) {
+        // Addresses are the same, don't do anything!
+        return;
+    }
+    if (r === -1) {
+        removeAtAddress(mdl, start);
+        addAt(mdl, destination, n);
+    } else {
+        addAt(mdl, destination, n);
+        removeAtAddress(mdl, start);
+    }
 }
 
 
@@ -302,28 +279,6 @@ const testModel: Node = {
         }
     }
 
-
-// const onAddColumn = (mdl: Model, name: string) => {
-//     mdl.push({
-//         name,
-//         contents: []
-//     });
-// }
-
-// const onAddItem = (mdl: Model, name: string, item: Item) => {
-//     const column = mdl.find(c => c.name === name);
-//     if (!column) { 
-//         return;
-//     }
-//     column.contents.push(item);
-// }
-
-// const onMoveItem = (mdl: Model, startName: string, startIndex: )
-
-// const root = document.body;
-
-
-
 let currentRoot: HTMLElement | undefined = undefined;
 let currentModel = testModel;
 let update = () => {
@@ -339,7 +294,6 @@ let update = () => {
 const createDragZone = (address: Address) => {
     const dragZone = document.createElement('div');
     dragZone.classList.add('dropZone');
-    // dragZone.style.width = '1em';
     dragZone.style.outline = '1px dashed red';
     dragZone.ondragenter = (ev) => {
         ev.preventDefault();
@@ -363,9 +317,7 @@ const createDragZone = (address: Address) => {
     }
     dragZone.ondrop = (ev) => {
         const d = ev.dataTransfer?.getData('text/plain');
-        console.log('Trying to move!', d, address);
         if(!d) return;
-        console.log('Should be moving1');
         const startAddress: Address = JSON.parse(d);
         onMove(currentModel, startAddress, address);
         const dropZones = document.getElementsByClassName('dropZone');
@@ -385,7 +337,6 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     root.ondragstart = (ev) => {
         ev.stopPropagation();
         ev.dataTransfer?.setData('text/plain', JSON.stringify(address));
-        console.log(ev.dataTransfer?.getData('text/plain'));
         const dropZones = document.getElementsByClassName('dropZone');
         for (let i = 0; i < dropZones.length; i++) {
             dropZones[i].classList.add('dropZonePotential');
@@ -454,10 +405,11 @@ const buildView = (model: Node) => {
 
         rootDiv.append(createNodeElement(current.value, [i]))
         current = current.next;
-        i++;
+        i++;[1]
     } while (current !== undefined)
 
     const columnDragZone = createDragZone([i]);
+    columnDragZone.style.width = '1em';
     rootDiv.append(columnDragZone);
 
     // Don't forget the add column button!
@@ -485,17 +437,3 @@ const buildView = (model: Node) => {
 };
 
 update();
-
-// const addButton = document.createElement('button');
-// addButton.textContent = 'This is a test';
-// const addZone = document.createElement('div');
-// addButton.onclick = async () => {
-//     const text = await promiseText(addZone);
-//     addZone.append(document.createTextNode(text));
-// }
-// document.body.append(addButton, addZone);
-
-// const ptbtn = promiseTextButton((s) => {
-//     addZone.append(document.createTextNode(s));
-// })
-// document.body.append(ptbtn);
