@@ -165,7 +165,6 @@ const addAt = (mdl: Node, address: Address, node: Node) => {
 const compareAddress = (add1: Address, add2: Address) => {
     const a1 = [...add1];
     const a2 = [...add2];
-    console.log(a1, a2);
     while (true) {
         let a = a1.shift();
         let b = a2.shift();
@@ -220,7 +219,6 @@ const onMove = (mdl: Node, start: Address, destination: Address) => {
         // One is inside the other, don't do anything!
         return;
     }
-    console.log(r);
     if (r === 0) {
         // Addresses are the same, don't do anything!
         return;
@@ -259,7 +257,7 @@ let update = () => {
 const createDragZone = (address: Address) => {
     const dragZone = document.createElement('div');
     dragZone.classList.add('dropZone');
-    dragZone.style.outline = '1px dashed red';
+    // dragZone.style.outline = '1px dashed red';
     dragZone.ondragenter = (ev) => {
         ev.preventDefault();
         dragZone.classList.add('dropZoneSelected')

@@ -22,7 +22,7 @@
             display:block;
         }
         .dropZonePotential { 
-            background-color: blue;
+            outline: 1px dashed black;
         }
         .dropZoneSelected {
             background-color: green;
@@ -174,7 +174,6 @@ const addAt = (mdl, address, node) => {
 const compareAddress = (add1, add2) => {
   const a1 = [...add1];
   const a2 = [...add2];
-  console.log(a1, a2);
   while (true) {
     let a = a1.shift();
     let b = a2.shift();
@@ -224,7 +223,6 @@ const onMove = (mdl, start, destination) => {
   if (isContainedBy(start, destination)) {
     return;
   }
-  console.log(r);
   if (r === 0) {
     return;
   }
@@ -258,7 +256,6 @@ let update = () => {
 const createDragZone = (address) => {
   const dragZone = document.createElement("div");
   dragZone.classList.add("dropZone");
-  dragZone.style.outline = "1px dashed red";
   dragZone.ondragenter = (ev) => {
     ev.preventDefault();
     dragZone.classList.add("dropZoneSelected");
