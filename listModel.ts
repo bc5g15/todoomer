@@ -235,52 +235,61 @@ const onMove = (mdl: Node, start: Address, destination: Address) => {
 }
 
 
-const testModel: Node = {
+// const testModel: Node = {
+//     value: undefined,
+//     contents: {
+//         startType: true,
+//         next: {
+//             value: {
+//                 value: 'First Column',
+//                 contents: { startType: true, next: {
+//                     value: {
+//                         value: 'First Leaf',
+//                         contents: { startType: true, next: undefined}
+//                     },
+//                     next: undefined
+//                 }}
+//             },
+//             next: {
+//                 value: {
+//                     value: 'Second Column',
+//                     contents: { startType: true, next: {
+//                         value: {
+//                             value: 'Second Node',
+//                             contents: {startType: true, next: {
+//                                 value: {
+//                                     value: 'First Inner Node',
+//                                     contents: {startType: true, next: undefined}
+//                                 },
+//                                 next: {
+//                                     value: {
+//                                         value: 'Second Inner Node',
+//                                         contents: {startType: true, next: undefined}
+//                                     },
+//                                     next: undefined
+//                                 }
+//                                 }}
+//                             },
+//                         next: undefined
+//                         }}
+//                     },
+//                     next: undefined
+//                 },
+//             }
+//         }
+//     }
+
+const MODEL_KEY = 'tmdr-model'
+
+let currentRoot: HTMLElement | undefined = undefined;
+let currentModel:Node = JSON.parse(localStorage.getItem(MODEL_KEY) ?? JSON.stringify({
     value: undefined,
     contents: {
         startType: true,
-        next: {
-            value: {
-                value: 'First Column',
-                contents: { startType: true, next: {
-                    value: {
-                        value: 'First Leaf',
-                        contents: { startType: true, next: undefined}
-                    },
-                    next: undefined
-                }}
-            },
-            next: {
-                value: {
-                    value: 'Second Column',
-                    contents: { startType: true, next: {
-                        value: {
-                            value: 'Second Node',
-                            contents: {startType: true, next: {
-                                value: {
-                                    value: 'First Inner Node',
-                                    contents: {startType: true, next: undefined}
-                                },
-                                next: {
-                                    value: {
-                                        value: 'Second Inner Node',
-                                        contents: {startType: true, next: undefined}
-                                    },
-                                    next: undefined
-                                }
-                                }}
-                            },
-                        next: undefined
-                        }}
-                    },
-                    next: undefined
-                },
-            }
-        }
+        next: undefined
     }
+}));
 
-let currentRoot: HTMLElement | undefined = undefined;
-let currentModel = testModel;
 let update = () => {
     if (currentRoot) {
         document.body.removeChild(currentRoot);
@@ -289,6 +298,7 @@ let update = () => {
     if (currentRoot) {
         document.body.appendChild(currentRoot);
     }
+    localStorage.setItem(MODEL_KEY, JSON.stringify(currentModel))
 }
 
 const createDragZone = (address: Address) => {
@@ -392,10 +402,27 @@ const buildView = (model: Node) => {
     // We don't care about the top level value, it is always just going to be for the children
     const rootDiv = document.createElement('div');
     rootDiv.className = 'root';
+
+    const addColumn = (s: string) => {
+        // Make it a column with a default box inside of it. 
+        // Top level boxes are kinda weird
+        appendItem(model, {
+            value: s,
+            contents: {
+                startType: true,
+                next: undefined
+            }
+        });
+        update();
+    }
+
     const children = model.contents;
     if (children.next === undefined) {
         // No children, can't do anything
-        return;
+        // Except add the ending button! 
+        const columnAddButton = promiseTextButton(addColumn);
+        rootDiv.append(columnAddButton);
+        return rootDiv;
     }
 
     let i = 0;
@@ -415,25 +442,6 @@ const buildView = (model: Node) => {
     columnDragZone.style.width = '1em';
     rootDiv.append(columnDragZone);
 
-    // Don't forget the add column button!
-    const addColumn = (s: string) => {
-        // Make it a column with a default box inside of it. 
-        // Top level boxes are kinda weird
-        appendItem(model, {
-            value: s,
-            contents: {
-                startType: true,
-                next: {
-                    value: {
-                        value: 'Blank',
-                        contents: {startType: true, next: undefined}
-                    },
-                    next: undefined
-                }
-            }
-        });
-        update();
-    }
     const columnAddButton = promiseTextButton(addColumn);
     rootDiv.append(columnAddButton);
     return rootDiv;

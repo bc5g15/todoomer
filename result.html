@@ -233,51 +233,15 @@ const onMove = (mdl, start, destination) => {
     removeAtAddress(mdl, start);
   }
 };
-const testModel = {
+const MODEL_KEY = "tmdr-model";
+let currentRoot = undefined;
+let currentModel = JSON.parse(localStorage.getItem(MODEL_KEY) ?? JSON.stringify({
   value: undefined,
   contents: {
     startType: true,
-    next: {
-      value: {
-        value: "First Column",
-        contents: { startType: true, next: {
-          value: {
-            value: "First Leaf",
-            contents: { startType: true, next: undefined }
-          },
-          next: undefined
-        } }
-      },
-      next: {
-        value: {
-          value: "Second Column",
-          contents: { startType: true, next: {
-            value: {
-              value: "Second Node",
-              contents: { startType: true, next: {
-                value: {
-                  value: "First Inner Node",
-                  contents: { startType: true, next: undefined }
-                },
-                next: {
-                  value: {
-                    value: "Second Inner Node",
-                    contents: { startType: true, next: undefined }
-                  },
-                  next: undefined
-                }
-              } }
-            },
-            next: undefined
-          } }
-        },
-        next: undefined
-      }
-    }
+    next: undefined
   }
-};
-let currentRoot = undefined;
-let currentModel = testModel;
+}));
 let update = () => {
   if (currentRoot) {
     document.body.removeChild(currentRoot);
@@ -286,6 +250,7 @@ let update = () => {
   if (currentRoot) {
     document.body.appendChild(currentRoot);
   }
+  localStorage.setItem(MODEL_KEY, JSON.stringify(currentModel));
 };
 const createDragZone = (address) => {
   const dragZone = document.createElement("div");
@@ -379,9 +344,21 @@ const createNodeElement = (node, address) => {
 const buildView = (model) => {
   const rootDiv = document.createElement("div");
   rootDiv.className = "root";
+  const addColumn = (s) => {
+    appendItem(model, {
+      value: s,
+      contents: {
+        startType: true,
+        next: undefined
+      }
+    });
+    update();
+  };
   const children = model.contents;
   if (children.next === undefined) {
-    return;
+    const columnAddButton = promiseTextButton(addColumn);
+    rootDiv.append(columnAddButton);
+    return rootDiv;
   }
   let i = 0;
   let current = children.next;
@@ -396,22 +373,6 @@ const buildView = (model) => {
   const columnDragZone = createDragZone([i]);
   columnDragZone.style.width = "1em";
   rootDiv.append(columnDragZone);
-  const addColumn = (s) => {
-    appendItem(model, {
-      value: s,
-      contents: {
-        startType: true,
-        next: {
-          value: {
-            value: "Blank",
-            contents: { startType: true, next: undefined }
-          },
-          next: undefined
-        }
-      }
-    });
-    update();
-  };
   const columnAddButton = promiseTextButton(addColumn);
   rootDiv.append(columnAddButton);
   return rootDiv;
