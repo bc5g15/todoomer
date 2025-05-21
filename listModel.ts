@@ -138,14 +138,17 @@ const appendItem = (node: Node, item: Node) => {
 }
 
 const findByAddress = (mdl: Node, address: Address): Node | undefined => {
-    if (address.length === 0 || mdl.contents === undefined) {
+    if (address.length < 1 || mdl.contents === undefined) {
         return mdl; 
     }
-    let node: Node|undefined = findByIndex(mdl.contents, address.unshift())
-    while (address.length > 0) {
+    const addressCopy = [...address];
+    console.log(addressCopy);
+    let node: Node|undefined = findByIndex(mdl.contents, addressCopy.shift()!)
+    while (addressCopy.length > 0) {
         if (!node || node.contents === undefined) return undefined; // Bad Address
-        const add = address.unshift();
+        const add = addressCopy.shift()!;
         node = findByIndex(node.contents, add);
+        console.log(node);
     }
     return node;
 }
@@ -173,8 +176,16 @@ const removeAtAddress = (mdl: Node, address: Address) => {
     const parent = address.slice(0, -1);
     const index = address[address.length-1];
     const n = findByAddress(mdl, parent);
+    console.log('parent', n, index);
     if (!n) return;
-    if (!n.contents) return;
+    if (!n.contents) {
+        return;
+    };
+    if (n.contents.next === undefined) {
+        // remove the singleton element
+        n.contents = undefined;
+        return;
+    }
     removeAt(n.contents, index);
 }
 
@@ -201,9 +212,12 @@ const addAt = (mdl: Node, address: Address, node: Node) => {
 
 const onMove = (mdl: Node, start: Address, destination: Address) => {
     const n = findByAddress(mdl, start);
+    console.log(start, destination, n);
+    // console.log(mdl);
     if (!n) return; // Bad address
     removeAtAddress(mdl, start);
     addAt(mdl, destination, n);
+    console.log(mdl);
 }
 
 
@@ -283,6 +297,17 @@ let update = () => {
 
 const createNodeElement = (node: Node, address: Address): HTMLElement => {
     const root = document.createElement('div');
+    root.draggable = true;
+    // Make the root draggable
+    root.ondragstart = (ev) => {
+        ev.stopPropagation();
+        ev.dataTransfer?.setData('text/plain', JSON.stringify(address));
+        console.log(ev.dataTransfer?.getData('text/plain'));
+        const dropZones = document.getElementsByClassName('dropZone');
+        for (let i = 0; i < dropZones.length; i++) {
+            dropZones[i].classList.add('dropZonePotential');
+        }
+    }
     const message = promiseTextDisplay((node.value ?? '') + address.join('/'), (s) => {
         node.value = s;
     })
@@ -318,6 +343,41 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     return root;
 }
 
+const createDragZone = (address: Address) => {
+    const columnDragZone = document.createElement('div');
+    columnDragZone.classList.add('dropZone');
+    columnDragZone.style.width = '1em';
+    columnDragZone.style.outline = '1px dashed red';
+    columnDragZone.ondragenter = (ev) => {
+        ev.preventDefault();
+        columnDragZone.classList.add('dropZoneSelected')
+    }
+    columnDragZone.ondragleave = (ev) => {
+        ev.preventDefault();
+        columnDragZone.classList.remove('dropZoneSelected');
+        columnDragZone.classList.add('dropZonePotential')
+    }
+    columnDragZone.ondragover = (ev) => {
+        ev.preventDefault();
+        ev.dataTransfer!.dropEffect = 'move';
+    }
+    columnDragZone.ondrop = (ev) => {
+        const d = ev.dataTransfer?.getData('text/plain');
+        console.log('Trying to move!', d, address);
+        if(!d) return;
+        console.log('Should be moving1');
+        const startAddress: Address = JSON.parse(d);
+        onMove(currentModel, startAddress, address);
+        const dropZones = document.getElementsByClassName('dropZone');
+        for (let i = 0; i < dropZones.length; i++) {
+            dropZones[i].classList.remove('dropZonePotential');
+            dropZones[i].classList.remove('dropZoneSelected');
+        }
+        update();
+    }
+    return columnDragZone;
+} 
+
 const buildView = (model: Node) => {
     // We don't care about the top level value, it is always just going to be for the children
     const rootDiv = document.createElement('div');
@@ -331,6 +391,10 @@ const buildView = (model: Node) => {
     let i = 0;
     let current: LinkedList<Node> | undefined = children;
     do {
+        // Add drag zones for the elements... 
+        const columnDragZone = createDragZone([i]);
+        rootDiv.append(columnDragZone);
+
         rootDiv.append(createNodeElement(current.value, [i]))
         current = current.next;
         i++;
