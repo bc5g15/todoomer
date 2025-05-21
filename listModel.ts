@@ -2,27 +2,28 @@ const promiseText = (defaultString = ''): [HTMLElement, Promise<string>, () => v
     // Create a special text form and add myself to the root
     const magicForm = document.createElement('form');
     const textInput = document.createElement('input');
+    textInput.style.width
     textInput.className = 'dynamicText';
     magicForm.append(textInput);
     textInput.value = defaultString;
 
     const p = new Promise<string>(res => {
         const submit = () => {
-            const textResult = textInput.value;
+            const textResult = textInput.value || defaultString;
             res(textResult);
         }
         magicForm.onsubmit = submit;
         textInput.onblur = submit;
     })
 
-    return [magicForm, p, () => textInput.focus()];
+    return [magicForm, p, () => {textInput.focus(); textInput.select()}];
 }
 
 const promiseTextButton = (handleText: (s: string) => void) => {
     const btn = document.createElement('button');
     btn.textContent = '+';
     btn.onclick = async () => {
-        const [form, promise, focus] = promiseText();
+        const [form, promise, focus] = promiseText('New Node');
         btn.replaceWith(form);
         focus();
         const result = await promise;
@@ -37,7 +38,7 @@ const promiseTextDisplay = (textValue: string, handleText: (s: string) => void) 
     para.innerText = textValue;
     para.className = 'editableText';
     para.onclick = async () => {
-        const [form, promise, focus] = await promiseText();
+        const [form, promise, focus] = await promiseText(textValue);
         para.replaceWith(form);
         focus();
         const result = await promise;
@@ -257,7 +258,6 @@ let update = () => {
 const createDragZone = (address: Address) => {
     const dragZone = document.createElement('div');
     dragZone.classList.add('dropZone');
-    // dragZone.style.outline = '1px dashed red';
     dragZone.ondragenter = (ev) => {
         ev.preventDefault();
         dragZone.classList.add('dropZoneSelected')
@@ -328,10 +328,9 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
         root.classList.add('selectedNode');
         selectedNode = address;
     }
-    const message = promiseTextDisplay((node.value ?? '') + address.join('/'), (s) => {
+    const message = promiseTextDisplay((node.value ?? ''), (s) => {
         node.value = s;
     })
-    // message.innerText = (node.value ?? '') + address.join('/');
     root.appendChild(message)
     if (node.contents.next === undefined) {
         root.classList.add('leaf');
