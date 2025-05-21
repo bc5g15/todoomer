@@ -15,6 +15,11 @@
         .root {
             display: flex;
         }
+        .dynamicText {
+            margin-block-start: 1em;
+            margin-block-end: 1em;
+            display:block;
+        }
     </style>
     <head>
         <title>Todoomer</title>
@@ -24,6 +29,7 @@
         const promiseText = (defaultString = "") => {
   const magicForm = document.createElement("form");
   const textInput = document.createElement("input");
+  textInput.className = "dynamicText";
   magicForm.append(textInput);
   textInput.value = defaultString;
   const p = new Promise((res) => {
@@ -42,6 +48,7 @@ const promiseTextButton = (handleText) => {
   btn.onclick = async () => {
     const [form, promise, focus] = promiseText();
     btn.replaceWith(form);
+    focus();
     const result = await promise;
     handleText(result);
     form.replaceWith(btn);

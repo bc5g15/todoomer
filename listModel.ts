@@ -2,6 +2,7 @@ const promiseText = (defaultString = ''): [HTMLElement, Promise<string>, () => v
     // Create a special text form and add myself to the root
     const magicForm = document.createElement('form');
     const textInput = document.createElement('input');
+    textInput.className = 'dynamicText';
     magicForm.append(textInput);
     textInput.value = defaultString;
 
@@ -23,6 +24,7 @@ const promiseTextButton = (handleText: (s: string) => void) => {
     btn.onclick = async () => {
         const [form, promise, focus] = promiseText();
         btn.replaceWith(form);
+        focus();
         const result = await promise;
         handleText(result);
         form.replaceWith(btn);
