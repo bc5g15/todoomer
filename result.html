@@ -34,13 +34,13 @@
     magicForm.onsubmit = submit;
     textInput.onblur = submit;
   });
-  return [magicForm, p];
+  return [magicForm, p, () => textInput.focus()];
 };
 const promiseTextButton = (handleText) => {
   const btn = document.createElement("button");
   btn.textContent = "+";
   btn.onclick = async () => {
-    const [form, promise] = promiseText();
+    const [form, promise, focus] = promiseText();
     btn.replaceWith(form);
     const result = await promise;
     handleText(result);
@@ -53,8 +53,9 @@ const promiseTextDisplay = (textValue, handleText) => {
   para.innerText = textValue;
   para.className = "editableText";
   para.onclick = async () => {
-    const [form, promise] = await promiseText();
+    const [form, promise, focus] = await promiseText();
     para.replaceWith(form);
+    focus();
     const result = await promise;
     handleText(result);
     para.innerText = result;

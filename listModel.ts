@@ -1,4 +1,4 @@
-const promiseText = (defaultString = ''): [HTMLElement, Promise<string>] => {
+const promiseText = (defaultString = ''): [HTMLElement, Promise<string>, () => void] => {
     // Create a special text form and add myself to the root
     const magicForm = document.createElement('form');
     const textInput = document.createElement('input');
@@ -14,14 +14,14 @@ const promiseText = (defaultString = ''): [HTMLElement, Promise<string>] => {
         textInput.onblur = submit;
     })
 
-    return [magicForm, p];
+    return [magicForm, p, () => textInput.focus()];
 }
 
 const promiseTextButton = (handleText: (s: string) => void) => {
     const btn = document.createElement('button');
     btn.textContent = '+';
     btn.onclick = async () => {
-        const [form, promise] = promiseText();
+        const [form, promise, focus] = promiseText();
         btn.replaceWith(form);
         const result = await promise;
         handleText(result);
@@ -35,8 +35,9 @@ const promiseTextDisplay = (textValue: string, handleText: (s: string) => void) 
     para.innerText = textValue;
     para.className = 'editableText';
     para.onclick = async () => {
-        const [form, promise] = await promiseText();
+        const [form, promise, focus] = await promiseText();
         para.replaceWith(form);
+        focus();
         const result = await promise;
         handleText(result);
         para.innerText = result;
