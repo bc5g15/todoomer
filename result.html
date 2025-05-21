@@ -291,6 +291,15 @@ const createDragZone = (address) => {
   };
   return dragZone;
 };
+let selectedNode = undefined;
+document.onkeyup = (ev) => {
+  if (ev.code === "Delete" || ev.code === "Backspace") {
+    if (selectedNode) {
+      removeAtAddress(currentModel, selectedNode);
+      update();
+    }
+  }
+};
 const createNodeElement = (node, address) => {
   const root = document.createElement("div");
   root.draggable = true;
@@ -301,6 +310,11 @@ const createNodeElement = (node, address) => {
     for (let i = 0;i < dropZones.length; i++) {
       dropZones[i].classList.add("dropZonePotential");
     }
+  };
+  root.onclick = (ev) => {
+    ev.stopPropagation();
+    console.log(address);
+    selectedNode = address;
   };
   const message = promiseTextDisplay((node.value ?? "") + address.join("/"), (s) => {
     node.value = s;

@@ -295,6 +295,17 @@ const createDragZone = (address: Address) => {
     return dragZone;
 } 
 
+let selectedNode: Address | undefined = undefined; 
+
+document.onkeyup = (ev) => {
+    if (ev.code === 'Delete' || ev.code === 'Backspace') {
+        if (selectedNode) {
+            removeAtAddress(currentModel, selectedNode);
+            update();
+        }
+    }
+}
+
 const createNodeElement = (node: Node, address: Address): HTMLElement => {
     const root = document.createElement('div');
     root.draggable = true;
@@ -306,6 +317,12 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
         for (let i = 0; i < dropZones.length; i++) {
             dropZones[i].classList.add('dropZonePotential');
         }
+    }
+    // Make the root selectable
+    root.onclick = (ev) => {
+        ev.stopPropagation();
+        console.log(address);
+        selectedNode = address;
     }
     const message = promiseTextDisplay((node.value ?? '') + address.join('/'), (s) => {
         node.value = s;
@@ -350,8 +367,6 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     root.append(elementAddButton);
     return root;
 }
-
-
 
 const buildView = (model: Node) => {
     // We don't care about the top level value, it is always just going to be for the children
