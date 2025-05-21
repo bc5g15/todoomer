@@ -143,28 +143,19 @@ const findByAddress = (mdl, address) => {
     return mdl;
   }
   const addressCopy = [...address];
-  console.log(addressCopy);
   let node = findByIndex(mdl.contents, addressCopy.shift());
   while (addressCopy.length > 0) {
     if (!node || node.contents === undefined)
       return;
     const add = addressCopy.shift();
     node = findByIndex(node.contents, add);
-    console.log(node);
   }
   return node;
-};
-const editValueAtAddress = (mdl, address, value) => {
-  const node = findByAddress(mdl, address);
-  if (!node)
-    return;
-  node.value = value;
 };
 const removeAtAddress = (mdl, address) => {
   const parent = address.slice(0, -1);
   const index = address[address.length - 1];
   const n = findByAddress(mdl, parent);
-  console.log("removing", n, index);
   if (!n)
     return;
   removeAt(n.contents, index);
@@ -173,7 +164,6 @@ const addAt = (mdl, address, node) => {
   const parent = address.slice(0, -1);
   const index = address[address.length - 1];
   const n = findByAddress(mdl, parent);
-  console.log("adding", index, n);
   if (!n)
     return;
   insertAt(n.contents, index, node);
@@ -181,9 +171,13 @@ const addAt = (mdl, address, node) => {
 const compareAddress = (add1, add2) => {
   const a1 = [...add1];
   const a2 = [...add2];
+  console.log(a1, a2);
   while (true) {
     let a = a1.shift();
     let b = a2.shift();
+    if (a === undefined && b === undefined) {
+      return 0;
+    }
     if (a === undefined) {
       return 1;
     }
@@ -193,22 +187,51 @@ const compareAddress = (add1, add2) => {
     if (a === b)
       continue;
     if (a < b) {
-      return -1;
+      return 1;
     }
     if (a > b) {
-      return 1;
+      return -1;
     }
     return 0;
   }
 };
+const isContainedBy = (start, destination) => {
+  const alst = [...start];
+  const blst = [...destination];
+  while (true) {
+    const a = alst.shift();
+    const b = blst.shift();
+    if (a === undefined && b === undefined) {
+      return true;
+    }
+    if (a === b) {
+      continue;
+    }
+    if (a === undefined) {
+      return true;
+    }
+    return false;
+  }
+};
 const onMove = (mdl, start, destination) => {
   const n = findByAddress(mdl, start);
-  console.log("moving", start, destination, n);
   if (!n)
     return;
   const r = compareAddress(start, destination);
-  removeAtAddress(mdl, start);
-  addAt(mdl, destination, n);
+  if (isContainedBy(start, destination)) {
+    return;
+  }
+  console.log(r);
+  if (r === 0) {
+    return;
+  }
+  if (r === -1) {
+    removeAtAddress(mdl, start);
+    addAt(mdl, destination, n);
+  } else {
+    addAt(mdl, destination, n);
+    removeAtAddress(mdl, start);
+  }
 };
 const testModel = {
   value: undefined,
@@ -290,10 +313,8 @@ const createDragZone = (address) => {
   };
   dragZone.ondrop = (ev) => {
     const d = ev.dataTransfer?.getData("text/plain");
-    console.log("Trying to move!", d, address);
     if (!d)
       return;
-    console.log("Should be moving1");
     const startAddress = JSON.parse(d);
     onMove(currentModel, startAddress, address);
     const dropZones = document.getElementsByClassName("dropZone");
@@ -311,7 +332,6 @@ const createNodeElement = (node, address) => {
   root.ondragstart = (ev) => {
     ev.stopPropagation();
     ev.dataTransfer?.setData("text/plain", JSON.stringify(address));
-    console.log(ev.dataTransfer?.getData("text/plain"));
     const dropZones = document.getElementsByClassName("dropZone");
     for (let i = 0;i < dropZones.length; i++) {
       dropZones[i].classList.add("dropZonePotential");
@@ -341,6 +361,9 @@ const createNodeElement = (node, address) => {
     i++;
     n = n.next;
   } while (n !== undefined);
+  const dragZone = createDragZone([...address, i]);
+  dragZone.style.height = "1em";
+  container.append(dragZone);
   root.append(container);
   const addElement = (s) => {
     appendItem(node, {
@@ -371,6 +394,7 @@ const buildView = (model) => {
     i++;
   } while (current !== undefined);
   const columnDragZone = createDragZone([i]);
+  columnDragZone.style.width = "1em";
   rootDiv.append(columnDragZone);
   const addColumn = (s) => {
     appendItem(model, {

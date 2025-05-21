@@ -368,6 +368,9 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
         i++;
         n = n.next;
     } while (n !== undefined);
+    const dragZone = createDragZone([...address, i]);
+    dragZone.style.height = '1em';
+    container.append(dragZone);
     root.append(container);
 
     // Add a button for inserting a new element to this column! 
