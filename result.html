@@ -1,0 +1,217 @@
+<html>
+    <style>
+        .leaf {
+            outline: 1px solid black;
+            background-color: white;
+        }
+        .branch {
+            padding: 1em;
+            margin: 1em;
+            outline: 1px solid green;
+            background-color: aqua;
+            min-height: 5em;
+            height: fit-content
+        }
+        .root {
+            display: flex;
+        }
+    </style>
+    <head>
+        <title>Todoomer</title>
+    </head>
+    <body></body>
+    <script>
+        const model = {
+  value: undefined,
+  contents: undefined
+};
+const findByIndex = (lst, index) => {
+  let r = lst;
+  while (index > 0) {
+    index--;
+    if (!r.next)
+      return;
+    r = r.next;
+  }
+  return r.value;
+};
+const removeAt = (lst, index) => {
+  let r = lst;
+  while (index > 1) {
+    index--;
+    if (!r.next)
+      return;
+    r = r.next;
+  }
+  r.next = r.next?.next ?? undefined;
+};
+const insertAt = (lst, index, item) => {
+  let r = lst;
+  while (index > 0) {
+    index--;
+    if (!r.next) {
+      r.next = {
+        value: item,
+        next: undefined
+      };
+      return;
+    }
+    r = r.next;
+  }
+  const oldNext = r.next;
+  r.next = {
+    value: item,
+    next: oldNext
+  };
+};
+const appendItem = (node, item) => {
+  let r = node.contents;
+  if (r === undefined) {
+    node.contents = {
+      value: item,
+      next: undefined
+    };
+    return;
+  }
+  while (r.next !== undefined) {
+    r = r.next;
+  }
+  r.next = {
+    value: item,
+    next: undefined
+  };
+};
+const findByAddress = (mdl, address) => {
+  if (address.length === 0 || mdl.contents === undefined) {
+    return mdl;
+  }
+  let node = findByIndex(mdl.contents, address.unshift());
+  while (address.length > 0) {
+    if (!node || node.contents === undefined)
+      return;
+    const add = address.unshift();
+    node = findByIndex(node.contents, add);
+  }
+  return node;
+};
+const removeAtAddress = (mdl, address) => {
+  const parent = address.slice(0, -1);
+  const index = address[address.length - 1];
+  const n = findByAddress(mdl, parent);
+  if (!n)
+    return;
+  if (!n.contents)
+    return;
+  removeAt(n.contents, index);
+};
+const appendAtAddress = (mdl, address, value) => {
+  const n = findByAddress(mdl, address);
+  if (!n)
+    return;
+  appendItem(n, { value, contents: undefined });
+};
+const addAt = (mdl, address, node) => {
+  const parent = address.slice(0, -1);
+  const index = address[address.length - 1];
+  const n = findByAddress(mdl, parent);
+  if (!n)
+    return;
+  if (!n.contents) {
+    n.contents = {
+      value: node,
+      next: undefined
+    };
+    return;
+  }
+  insertAt(n.contents, index, node);
+};
+const onMove = (mdl, start, destination) => {
+  const n = findByAddress(mdl, start);
+  if (!n)
+    return;
+  removeAtAddress(mdl, start);
+  addAt(mdl, destination, n);
+};
+const root = document.body;
+const createNodeElement = (node, address) => {
+  const root = document.createElement("div");
+  const message = document.createElement("p");
+  message.innerText = (node.value ?? "") + address.join("/");
+  root.appendChild(message);
+  if (node.contents === undefined) {
+    root.className = "leaf";
+    return root;
+  }
+  root.className = "branch";
+  const container = document.createElement("div");
+  let i = 0;
+  let n = node.contents;
+  do {
+    const child = createNodeElement(n.value, [...address, i]);
+    container.append(child);
+    i++;
+    n = n.next;
+  } while (n !== undefined);
+  root.append(container);
+  return root;
+};
+const buildView = (root, model) => {
+  const rootDiv = document.createElement("div");
+  rootDiv.className = "root";
+  const children = model.contents;
+  if (children === undefined) {
+    return;
+  }
+  let i = 0;
+  let current = children;
+  do {
+    rootDiv.append(createNodeElement(current.value, [i]));
+    current = current.next;
+    i++;
+  } while (current !== undefined);
+  root.append(rootDiv);
+};
+const testModel = {
+  value: undefined,
+  contents: {
+    value: {
+      value: "First Column",
+      contents: {
+        value: {
+          value: "First Leaf",
+          contents: undefined
+        },
+        next: undefined
+      }
+    },
+    next: {
+      value: {
+        value: "Second Column",
+        contents: {
+          value: {
+            value: "Second Node",
+            contents: {
+              value: {
+                value: "Inner Node",
+                contents: undefined
+              },
+              next: {
+                value: {
+                  value: "Second Inner Node",
+                  contents: undefined
+                },
+                next: undefined
+              }
+            }
+          },
+          next: undefined
+        }
+      },
+      next: undefined
+    }
+  }
+};
+buildView(document.body, testModel);
+
+    </script>
+</html>
