@@ -1,3 +1,36 @@
+const promiseText = (root: HTMLElement, defaultString = '') => new Promise<string>(res => {
+    // Create a special text form and add myself to the root
+    const magicForm = document.createElement('form');
+    const textInput = document.createElement('input');
+    magicForm.append(textInput);
+    root.append(magicForm);
+    textInput.value = defaultString;
+    textInput.focus();
+
+    const submit = () => {
+        const textResult = textInput.value;
+        root.removeChild(magicForm);
+        res(textResult);
+    }
+
+    magicForm.onsubmit = submit;
+    textInput.onblur = submit;
+});
+
+const promiseTextButton = (handleText: (s: string) => void) => {
+    const btn = document.createElement('button');
+    btn.textContent = '+';
+    btn.onclick = async () => {
+        const parent = btn.parentElement;
+        if (!parent) return;
+        parent?.removeChild(btn);
+        const result = await promiseText(parent);
+        handleText(result);
+        parent.appendChild(btn);
+    }
+    return btn;
+}
+
 // type Item = Column | {
 //     value: string
 // }
@@ -256,3 +289,17 @@ const testModel: Node = {
 }
 
 buildView(document.body, testModel);
+
+const addButton = document.createElement('button');
+addButton.textContent = 'This is a test';
+const addZone = document.createElement('div');
+addButton.onclick = async () => {
+    const text = await promiseText(addZone);
+    addZone.append(document.createTextNode(text));
+}
+document.body.append(addButton, addZone);
+
+const ptbtn = promiseTextButton((s) => {
+    addZone.append(document.createTextNode(s));
+})
+document.body.append(ptbtn);
