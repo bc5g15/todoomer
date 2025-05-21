@@ -410,7 +410,9 @@ const buildView = (model: Node) => {
         columnDragZone.style.width = '1em';
         rootDiv.append(columnDragZone);
 
-        rootDiv.append(createNodeElement(current.value, [i]))
+        const topColumn = createNodeElement(current.value, [i])
+        topColumn.classList.add('topColumn')
+        rootDiv.append(topColumn)
         current = current.next;
         i++;[1]
     } while (current !== undefined)

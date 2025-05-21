@@ -3,14 +3,14 @@
         .leaf {
             border: 1px solid black;
             background-color: white;
-            padding-inline: 1em;
-            margin: 1em;
+            padding-inline: 0.2em;
+            margin: 0.2em;
         }
         .branch {
-            padding: 1em;
-            margin: 1em;
-            border: 1px solid green;
-            background-color: aqua;
+            background-color: white;
+            padding: 0.2em;
+            margin: 0.2em;
+            border: 1px solid black;
             min-height: 5em;
             height: fit-content
         }
@@ -21,6 +21,7 @@
             margin-block-start: 1em;
             margin-block-end: 1em;
             display:block;
+            word-wrap: normal;
         }
         .dropZonePotential { 
             outline: 1px dashed black;
@@ -31,21 +32,28 @@
         .selectedNode {
             outline: 1px solid blue;
         }
+        .topColumn {
+            background-color: aqua;
+            min-width: 10em;
+        }
     </style>
     <head>
         <title>Todoomer</title>
     </head>
     <body></body>
     <script>
-        const promiseText = (defaultString = "") => {
+        let editingText = false;
+const promiseText = (defaultString = "") => {
   const magicForm = document.createElement("form");
   const textInput = document.createElement("input");
   textInput.style.width;
   textInput.className = "dynamicText";
   magicForm.append(textInput);
   textInput.value = defaultString;
+  editingText = true;
   const p = new Promise((res) => {
     const submit = () => {
+      editingText = false;
       const textResult = textInput.value || defaultString;
       res(textResult);
     };
@@ -298,7 +306,7 @@ const createDragZone = (address) => {
 };
 let selectedNode = undefined;
 document.onkeyup = (ev) => {
-  if (ev.code === "Delete" || ev.code === "Backspace") {
+  if (!editingText && ev.code === "Delete") {
     if (selectedNode) {
       removeAtAddress(currentModel, selectedNode);
       update();
@@ -391,7 +399,9 @@ const buildView = (model) => {
     const columnDragZone = createDragZone([i]);
     columnDragZone.style.width = "1em";
     rootDiv.append(columnDragZone);
-    rootDiv.append(createNodeElement(current.value, [i]));
+    const topColumn = createNodeElement(current.value, [i]);
+    topColumn.classList.add("topColumn");
+    rootDiv.append(topColumn);
     current = current.next;
     i++;
   } while (current !== undefined);
