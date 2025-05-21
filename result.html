@@ -194,6 +194,13 @@ const addAt = (mdl, address, node) => {
     };
     return;
   }
+  if (index === 0) {
+    n.contents = {
+      value: node,
+      next: n.contents
+    };
+    return;
+  }
   insertAt(n.contents, index, node);
 };
 const onMove = (mdl, start, destination) => {

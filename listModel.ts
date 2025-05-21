@@ -207,6 +207,13 @@ const addAt = (mdl: Node, address: Address, node: Node) => {
         };
         return;
     }
+    if (index === 0) {
+        n.contents = {
+            value: node,
+            next: n.contents
+        }
+        return;
+    }
     insertAt(n.contents, index, node);
 }
 
