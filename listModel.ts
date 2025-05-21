@@ -216,19 +216,28 @@ const addAt = (mdl: Node, address: Address, node: Node) => {
     insertAt(n.contents, index, node);
 }
 
-// const compareAddress = (add1: Address, add2: Address) => {
-//     const a1 = [...add1];
-//     const a2 = [...add2];
-//     while (true) {
-//         let a = a1.shift();
-//         let b = a2.shift();
-//         if (a === b) continue;
-//         if (a === undefined) {
-//             return -1
-//         }
-//         if (a > b)
-//     }
-// }
+const compareAddress = (add1: Address, add2: Address) => {
+    const a1 = [...add1];
+    const a2 = [...add2];
+    while (true) {
+        let a = a1.shift();
+        let b = a2.shift();
+        if (a === undefined) {
+            return 1
+        }
+        if (b === undefined) {
+            return -1
+        }
+        if (a === b) continue;
+        if (a < b) {
+            return -1;
+        }
+        if (a > b) {
+            return 1;
+        }
+        return 0;
+    }
+}
 
 const onMove = (mdl: Node, start: Address, destination: Address) => {
     const n = findByAddress(mdl, start);
@@ -238,53 +247,16 @@ const onMove = (mdl: Node, start: Address, destination: Address) => {
     // The order of these operations depends on the cardinality of the addresses
     // Can't just do them in a fixed order! 
     // Or can I? 
+    const r = compareAddress(start, destination);
+    // if (r === -1) {
     removeAtAddress(mdl, start);
-    console.log(mdl);
     addAt(mdl, destination, n);
+    // } else {
+    //     addAt(mdl, destination, n);
+    //     removeAtAddress(mdl, start);
+    // }
 }
 
-
-// const testModel: Node = {
-//     value: undefined,
-//     contents: {
-//         value: {
-//             value: 'First Column',
-//             contents: {
-//                 value: {
-//                     value: 'First Leaf',
-//                     contents: undefined
-//                 },
-//                 next: undefined
-//             }
-//         },
-//         next: {
-//                     value: {
-//                         value: 'Second Column',
-//                         contents: {
-//                             value: {
-                                
-//                                 value: 'Second Node',
-//                                 contents: {
-//                                     value: {
-//                                         value: 'Inner Node',
-//                                         contents: undefined
-//                                     },
-//                                     next: {
-//                                         value: {
-//                                             value: 'Second Inner Node',
-//                                             contents: undefined
-//                                         },
-//                                         next: undefined
-//                                     }
-//                                 }
-//                             },
-//                             next: undefined
-//                         }
-//                     },
-//                     next: undefined
-//                 }
-//     }
-// }
 
 const testModel: Node = {
     value: undefined,

@@ -178,13 +178,36 @@ const addAt = (mdl, address, node) => {
     return;
   insertAt(n.contents, index, node);
 };
+const compareAddress = (add1, add2) => {
+  const a1 = [...add1];
+  const a2 = [...add2];
+  while (true) {
+    let a = a1.shift();
+    let b = a2.shift();
+    if (a === undefined) {
+      return 1;
+    }
+    if (b === undefined) {
+      return -1;
+    }
+    if (a === b)
+      continue;
+    if (a < b) {
+      return -1;
+    }
+    if (a > b) {
+      return 1;
+    }
+    return 0;
+  }
+};
 const onMove = (mdl, start, destination) => {
   const n = findByAddress(mdl, start);
   console.log("moving", start, destination, n);
   if (!n)
     return;
+  const r = compareAddress(start, destination);
   removeAtAddress(mdl, start);
-  console.log(mdl);
   addAt(mdl, destination, n);
 };
 const testModel = {
