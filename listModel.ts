@@ -314,9 +314,17 @@ const buildView = (model: Node) => {
 
     // Don't forget the add column button!
     const addColumn = (s: string) => {
+        // Make it a column with a default box inside of it. 
+        // Top level boxes are kinda weird
         appendItem(model, {
             value: s,
-            contents: undefined
+            contents: {
+                value: {
+                    value: 'Blank',
+                    contents: undefined
+                },
+                next: undefined
+            }
         });
         update();
     }
@@ -325,20 +333,18 @@ const buildView = (model: Node) => {
     return rootDiv;
 };
 
-
-// buildView(document.body, testModel);
 update();
 
-const addButton = document.createElement('button');
-addButton.textContent = 'This is a test';
-const addZone = document.createElement('div');
-addButton.onclick = async () => {
-    const text = await promiseText(addZone);
-    addZone.append(document.createTextNode(text));
-}
-document.body.append(addButton, addZone);
+// const addButton = document.createElement('button');
+// addButton.textContent = 'This is a test';
+// const addZone = document.createElement('div');
+// addButton.onclick = async () => {
+//     const text = await promiseText(addZone);
+//     addZone.append(document.createTextNode(text));
+// }
+// document.body.append(addButton, addZone);
 
-const ptbtn = promiseTextButton((s) => {
-    addZone.append(document.createTextNode(s));
-})
-document.body.append(ptbtn);
+// const ptbtn = promiseTextButton((s) => {
+//     addZone.append(document.createTextNode(s));
+// })
+// document.body.append(ptbtn);
