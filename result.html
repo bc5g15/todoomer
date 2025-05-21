@@ -1,14 +1,14 @@
 <html>
     <style>
         .leaf {
-            outline: 1px solid black;
+            border: 1px solid black;
             background-color: white;
             padding-inline: 1em;
         }
         .branch {
             padding: 1em;
             margin: 1em;
-            outline: 1px solid green;
+            border: 1px solid green;
             background-color: aqua;
             min-height: 5em;
             height: fit-content
@@ -26,6 +26,9 @@
         }
         .dropZoneSelected {
             background-color: green;
+        }
+        .selectedNode {
+            outline: 1px solid blue;
         }
     </style>
     <head>
@@ -302,6 +305,7 @@ document.onkeyup = (ev) => {
 };
 const createNodeElement = (node, address) => {
   const root = document.createElement("div");
+  root.classList.add("selectableNode");
   root.draggable = true;
   root.ondragstart = (ev) => {
     ev.stopPropagation();
@@ -314,6 +318,11 @@ const createNodeElement = (node, address) => {
   root.onclick = (ev) => {
     ev.stopPropagation();
     console.log(address);
+    const classes = document.getElementsByClassName("selectedNode");
+    if (classes.length) {
+      classes[0].classList.remove("selectedNode");
+    }
+    root.classList.add("selectedNode");
     selectedNode = address;
   };
   const message = promiseTextDisplay((node.value ?? "") + address.join("/"), (s) => {
@@ -321,13 +330,13 @@ const createNodeElement = (node, address) => {
   });
   root.appendChild(message);
   if (node.contents.next === undefined) {
-    root.className = "leaf";
+    root.classList.add("leaf");
     const dragZone = createDragZone([...address, 0]);
     dragZone.style.height = "1em";
     root.append(dragZone);
     return root;
   }
-  root.className = "branch";
+  root.classList.add("branch");
   const container = document.createElement("div");
   let i = 0;
   let n = node.contents.next;

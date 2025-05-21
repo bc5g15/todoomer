@@ -308,6 +308,7 @@ document.onkeyup = (ev) => {
 
 const createNodeElement = (node: Node, address: Address): HTMLElement => {
     const root = document.createElement('div');
+    root.classList.add('selectableNode');
     root.draggable = true;
     // Make the root draggable
     root.ondragstart = (ev) => {
@@ -322,6 +323,11 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     root.onclick = (ev) => {
         ev.stopPropagation();
         console.log(address);
+        const classes = document.getElementsByClassName('selectedNode');
+        if (classes.length) {
+            classes[0].classList.remove('selectedNode');
+        }
+        root.classList.add('selectedNode');
         selectedNode = address;
     }
     const message = promiseTextDisplay((node.value ?? '') + address.join('/'), (s) => {
@@ -330,14 +336,14 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     // message.innerText = (node.value ?? '') + address.join('/');
     root.appendChild(message)
     if (node.contents.next === undefined) {
-        root.className = 'leaf';
+        root.classList.add('leaf');
         // Leaf node, create drag zone that would turn this into a branch
         const dragZone = createDragZone([...address, 0]);
         dragZone.style.height = '1em';
         root.append(dragZone);
         return root;
     }
-    root.className = 'branch';
+    root.classList.add('branch');
     const container = document.createElement('div');
     let i = 0;
     let n: LinkedList<Node> | undefined = node.contents.next;
