@@ -1,5 +1,11 @@
 <html>
     <style>
+        body {
+            background-color: aliceblue;
+            color: black;
+            font-family: 'Verdana';
+        }
+        
         .leaf {
             border: 1px solid black;
             background-color: white;
@@ -35,6 +41,21 @@
         .topColumn {
             background-color: aqua;
             min-width: 10em;
+        }
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: black;
+                color: azure;
+            }
+            .branch {
+                background-color: darkblue;
+            }
+            .leaf {
+                background-color: black;
+            }
+            .topColumn {
+                background-color: darkgoldenrod;
+            }
         }
     </style>
     <head>
