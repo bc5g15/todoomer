@@ -334,6 +334,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     }
     const message = promiseTextDisplay((node.value ?? ''), (s) => {
         node.value = s;
+        update();
     })
     root.appendChild(message)
     if (node.contents.next === undefined) {
