@@ -5,7 +5,6 @@ const promiseText = (defaultString = ''): [HTMLElement, Promise<string>, () => v
     const magicForm = document.createElement('form');
     magicForm.method = 'dialog';
     const textInput = document.createElement('input');
-    textInput.style.width
     textInput.className = 'dynamicText';
     magicForm.append(textInput);
     textInput.value = defaultString;
@@ -333,6 +332,17 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
         root.classList.add('selectedNode');
         selectedNode = address;
     }
+
+    // Add the delete button to the top-right of the root node
+    const delButton = document.createElement('button');
+    delButton.classList.add('deleteButton');
+    delButton.textContent = 'X'
+    delButton.onclick = () => {
+        removeAtAddress(currentModel, address);
+        update();
+    }
+    root.append(delButton);
+
     const message = promiseTextDisplay((node.value ?? ''), (s) => {
         node.value = s;
         update();
