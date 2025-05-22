@@ -322,10 +322,24 @@ document.onkeyup = (ev) => {
 const DEFAULT_COLOUR = '#3c5375';
 const DEFAULT_LEAF_COLOUR = '#000000';
 
+
+const calculateTextColour = (backgroundColour: string) => {
+    const parseHex = (startIndex: number, endIndex: number) => {
+        return parseInt(backgroundColour.slice(startIndex, endIndex), 16);
+    }    
+    const r = parseHex(1, 3);
+    const g = parseHex(3, 5);
+    const b = parseHex(5, 7);
+    // Stole these numbers from a stack overflow answer: 
+    // https://stackoverflow.com/questions/3942878/how-to-decide-font-color-in-white-or-black-depending-on-background-color
+    return (r*0.299+g*0.587+b*0.114) > 186 ? '#000000' : '#FFFFFF'
+}
+
 const createNodeElement = (node: Node, address: Address): HTMLElement => {
     const { text, colour } = node.value ?? {};
     const root = document.createElement('div');
     root.style.backgroundColor = colour ?? DEFAULT_COLOUR;
+    root.style.color = calculateTextColour(root.style.backgroundColor);
     root.classList.add('selectableNode');
     root.draggable = true;
     // Make the root draggable
@@ -373,6 +387,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     colourButton.onchange = () => {
         root.style.backgroundColor = colourButton.value;
         node.value.colour = colourButton.value;
+        root.style.color = calculateTextColour(colourButton.value);
     }
     controlTray.append(colourButton);
     controlTray.append(delButton);
@@ -385,6 +400,14 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
         update();
     })
     root.appendChild(message)
+    // Add a button for inserting a new element to this column! 
+    const addElement = (text: string) => {
+        appendItem(node, {
+            value: { text },
+            contents: {startType: true, next: undefined}
+        });
+        update();
+    }
     if (node.contents.next === undefined) {
         root.classList.add('leaf');
         // Leaf node, create drag zone that would turn this into a branch
@@ -393,6 +416,9 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
         }
         const dragZone = createDragZone([...address, 0]);
         dragZone.style.height = '1em';
+        const leafAddButton = promiseTextButton(addElement);
+        leafAddButton.classList.add('showOnSelected');
+        root.append(leafAddButton);
         root.append(dragZone);
         return root;
     }
@@ -414,14 +440,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     container.append(dragZone);
     root.append(container);
 
-    // Add a button for inserting a new element to this column! 
-    const addElement = (text: string) => {
-        appendItem(node, {
-            value: { text },
-            contents: {startType: true, next: undefined}
-        });
-        update();
-    }
+    
     const elementAddButton = promiseTextButton(addElement);
     root.append(elementAddButton);
     return root;
