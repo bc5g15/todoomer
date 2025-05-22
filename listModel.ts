@@ -3,6 +3,7 @@ let editingText = false;
 const promiseText = (defaultString = ''): [HTMLElement, Promise<string>, () => void] => {
     // Create a special text form and add myself to the root
     const magicForm = document.createElement('form');
+    magicForm.method = 'dialog';
     const textInput = document.createElement('input');
     textInput.style.width
     textInput.className = 'dynamicText';
@@ -11,7 +12,8 @@ const promiseText = (defaultString = ''): [HTMLElement, Promise<string>, () => v
     editingText = true;
 
     const p = new Promise<string>(res => {
-        const submit = () => {
+        const submit = (ev: SubmitEvent | FocusEvent) => {
+            ev.preventDefault();
             editingText = false;
             const textResult = textInput.value || defaultString;
             res(textResult);
@@ -324,7 +326,6 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     // Make the root selectable
     root.onclick = (ev) => {
         ev.stopPropagation();
-        console.log(address);
         const classes = document.getElementsByClassName('selectedNode');
         if (classes.length) {
             classes[0].classList.remove('selectedNode');

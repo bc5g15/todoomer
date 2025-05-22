@@ -70,6 +70,7 @@
         let editingText = false;
 const promiseText = (defaultString = "") => {
   const magicForm = document.createElement("form");
+  magicForm.method = "dialog";
   const textInput = document.createElement("input");
   textInput.style.width;
   textInput.className = "dynamicText";
@@ -77,7 +78,8 @@ const promiseText = (defaultString = "") => {
   textInput.value = defaultString;
   editingText = true;
   const p = new Promise((res) => {
-    const submit = () => {
+    const submit = (ev) => {
+      ev.preventDefault();
       editingText = false;
       const textResult = textInput.value || defaultString;
       res(textResult);
@@ -352,7 +354,6 @@ const createNodeElement = (node, address) => {
   };
   root.onclick = (ev) => {
     ev.stopPropagation();
-    console.log(address);
     const classes = document.getElementsByClassName("selectedNode");
     if (classes.length) {
       classes[0].classList.remove("selectedNode");
