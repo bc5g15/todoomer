@@ -5,16 +5,13 @@
             color: black;
             font-family: 'Verdana';
         }
-        
         .leaf {
             border: 1px solid black;
-            background-color: white;
             padding-inline: 0.2em;
             margin: 0.2em;
             position: relative;
         }
         .branch {
-            background-color: white;
             padding: 0.2em;
             margin: 0.2em;
             border: 1px solid black;
@@ -44,35 +41,32 @@
             outline: 1px solid blue;
         }
         .topColumn {
-            background-color: aqua;
+            /* background-color: aqua; */
             min-width: 10em;
         }
-        .deleteButton {
-            display:none;
+        .controlTray {
+            display: none;
             position: absolute;
             top: 0;
             right: 0; 
         }
-        .selectedNode > .deleteButton {
-            display:block;
+        .selectedNode > .controlTray {
+            display:flex;
         }
         @media (prefers-color-scheme: dark) {
             body {
-                background-color: black;
+                background-color: #313336;
                 color: azure;
-            }
-            .branch {
-                background-color: darkblue;
-            }
-            .leaf {
-                background-color: black;
-            }
-            .topColumn {
-                background-color: darkgoldenrod;
             }
             input {
                 background-color: black;
                 color: whitesmoke;
+            }
+            .dropZonePotential {
+                outline: 1px dashed white;
+            }
+            .leaf {
+                outline: 1px solid white;
             }
         }
     </style>
@@ -290,7 +284,6 @@ const onMove = (mdl, start, destination) => {
 const MODEL_KEY = "tmdr-model";
 let currentRoot = undefined;
 let currentModel = JSON.parse(localStorage.getItem(MODEL_KEY) ?? JSON.stringify({
-  value: undefined,
   contents: {
     startType: true,
     next: undefined
@@ -345,6 +338,14 @@ const createDragZone = (address) => {
   return dragZone;
 };
 let selectedNode = undefined;
+document.body.onclick = (ev) => {
+  ev.stopPropagation();
+  selectedNode = undefined;
+  const classes = document.getElementsByClassName("selectedNode");
+  if (classes.length) {
+    classes[0].classList.remove("selectedNode");
+  }
+};
 document.onkeyup = (ev) => {
   if (!editingText && ev.code === "Delete") {
     if (selectedNode) {
@@ -353,8 +354,12 @@ document.onkeyup = (ev) => {
     }
   }
 };
+const DEFAULT_COLOUR = "#3c5375";
+const DEFAULT_LEAF_COLOUR = "#000000";
 const createNodeElement = (node, address) => {
+  const { text, colour } = node.value ?? {};
   const root = document.createElement("div");
+  root.style.backgroundColor = colour ?? DEFAULT_COLOUR;
   root.classList.add("selectableNode");
   root.draggable = true;
   root.ondragstart = (ev) => {
@@ -374,6 +379,9 @@ const createNodeElement = (node, address) => {
     root.classList.add("selectedNode");
     selectedNode = address;
   };
+  const controlTray = document.createElement("div");
+  controlTray.classList.add("controlTray");
+  root.append(controlTray);
   const delButton = document.createElement("button");
   delButton.classList.add("deleteButton");
   delButton.textContent = "X";
@@ -381,14 +389,28 @@ const createNodeElement = (node, address) => {
     removeAtAddress(currentModel, address);
     update();
   };
-  root.append(delButton);
-  const message = promiseTextDisplay(node.value ?? "", (s) => {
-    node.value = s;
+  controlTray.append(delButton);
+  const colourButton = document.createElement("input");
+  colourButton.type = "color";
+  colourButton.value = colour ?? root.style.backgroundColor ?? DEFAULT_COLOUR;
+  colourButton.onchange = () => {
+    root.style.backgroundColor = colourButton.value;
+    node.value.colour = colourButton.value;
+  };
+  controlTray.append(colourButton);
+  const message = promiseTextDisplay(text ?? "", (s) => {
+    node.value = {
+      ...node.value,
+      text
+    };
     update();
   });
   root.appendChild(message);
   if (node.contents.next === undefined) {
     root.classList.add("leaf");
+    if (!colour) {
+      root.style.backgroundColor = DEFAULT_LEAF_COLOUR;
+    }
     const dragZone = createDragZone([...address, 0]);
     dragZone.style.height = "1em";
     root.append(dragZone);
@@ -411,9 +433,9 @@ const createNodeElement = (node, address) => {
   dragZone.style.height = "1em";
   container.append(dragZone);
   root.append(container);
-  const addElement = (s) => {
+  const addElement = (text) => {
     appendItem(node, {
-      value: s,
+      value: { text },
       contents: { startType: true, next: undefined }
     });
     update();
@@ -425,9 +447,9 @@ const createNodeElement = (node, address) => {
 const buildView = (model) => {
   const rootDiv = document.createElement("div");
   rootDiv.className = "root";
-  const addColumn = (s) => {
+  const addColumn = (text) => {
     appendItem(model, {
-      value: s,
+      value: { text },
       contents: {
         startType: true,
         next: undefined

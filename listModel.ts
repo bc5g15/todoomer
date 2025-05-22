@@ -54,7 +54,17 @@ const promiseTextDisplay = (textValue: string, handleText: (s: string) => void) 
     return para;
 }
 
-type NodeValue = string | undefined
+// const promiseColourPicker = (defaultValue?: string) => {
+//     const input = document.createElement('input');
+//     input.type = 'color';
+//     input.value = defaultValue ?? '';
+//     input.onchange = 
+// }
+
+type NodeValue = {
+    text: string,
+    colour?: string 
+};
 
 type Node = {
     value: NodeValue;
@@ -242,7 +252,6 @@ const MODEL_KEY = 'tmdr-model'
 
 let currentRoot: HTMLElement | undefined = undefined;
 let currentModel:Node = JSON.parse(localStorage.getItem(MODEL_KEY) ?? JSON.stringify({
-    value: undefined,
     contents: {
         startType: true,
         next: undefined
@@ -299,6 +308,14 @@ const createDragZone = (address: Address) => {
 } 
 
 let selectedNode: Address | undefined = undefined; 
+document.body.onclick = (ev) => {
+    ev.stopPropagation();
+    selectedNode = undefined;
+    const classes = document.getElementsByClassName('selectedNode');
+    if (classes.length) {
+        classes[0].classList.remove('selectedNode');
+    }
+}
 
 document.onkeyup = (ev) => {
     if (!editingText && ev.code === 'Delete') {
@@ -309,8 +326,13 @@ document.onkeyup = (ev) => {
     }
 }
 
+const DEFAULT_COLOUR = '#3c5375';
+const DEFAULT_LEAF_COLOUR = '#000000';
+
 const createNodeElement = (node: Node, address: Address): HTMLElement => {
+    const { text, colour } = node.value ?? {};
     const root = document.createElement('div');
+    root.style.backgroundColor = colour ?? DEFAULT_COLOUR;
     root.classList.add('selectableNode');
     root.draggable = true;
     // Make the root draggable
@@ -334,6 +356,9 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     }
 
     // Add the delete button to the top-right of the root node
+    const controlTray = document.createElement('div');
+    controlTray.classList.add('controlTray');
+    root.append(controlTray);
     const delButton = document.createElement('button');
     delButton.classList.add('deleteButton');
     delButton.textContent = 'X'
@@ -341,16 +366,31 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
         removeAtAddress(currentModel, address);
         update();
     }
-    root.append(delButton);
 
-    const message = promiseTextDisplay((node.value ?? ''), (s) => {
-        node.value = s;
+    controlTray.append(delButton);
+    const colourButton = document.createElement('input');
+    colourButton.type = 'color';
+    colourButton.value = colour ?? root.style.backgroundColor ?? DEFAULT_COLOUR;
+    colourButton.onchange = () => {
+        root.style.backgroundColor = colourButton.value;
+        node.value.colour = colourButton.value;
+    }
+    controlTray.append(colourButton);
+
+    const message = promiseTextDisplay((text ?? ''), (s) => {
+        node.value = {
+            ...node.value,
+            text: text
+        }
         update();
     })
     root.appendChild(message)
     if (node.contents.next === undefined) {
         root.classList.add('leaf');
         // Leaf node, create drag zone that would turn this into a branch
+        if (!colour) {
+            root.style.backgroundColor = DEFAULT_LEAF_COLOUR;
+        }
         const dragZone = createDragZone([...address, 0]);
         dragZone.style.height = '1em';
         root.append(dragZone);
@@ -375,9 +415,9 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     root.append(container);
 
     // Add a button for inserting a new element to this column! 
-    const addElement = (s: string) => {
+    const addElement = (text: string) => {
         appendItem(node, {
-            value: s,
+            value: { text },
             contents: {startType: true, next: undefined}
         });
         update();
@@ -392,11 +432,11 @@ const buildView = (model: Node) => {
     const rootDiv = document.createElement('div');
     rootDiv.className = 'root';
 
-    const addColumn = (s: string) => {
+    const addColumn = (text: string) => {
         // Make it a column with a default box inside of it. 
         // Top level boxes are kinda weird
         appendItem(model, {
-            value: s,
+            value: { text },
             contents: {
                 startType: true,
                 next: undefined
@@ -408,7 +448,7 @@ const buildView = (model: Node) => {
     const children = model.contents;
     if (children.next === undefined) {
         // No children, can't do anything
-        // Except add the ending button! 
+        // Except add the add column button! 
         const columnAddButton = promiseTextButton(addColumn);
         rootDiv.append(columnAddButton);
         return rootDiv;
