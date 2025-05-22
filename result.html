@@ -306,13 +306,6 @@ const createDragZone = (address) => {
     ev.preventDefault();
     dragZone.classList.add("dropZoneSelected");
   };
-  dragZone.ondragend = () => {
-    const dropZones = document.getElementsByClassName("dropZone");
-    for (let i = 0;i < dropZones.length; i++) {
-      dropZones[i].classList.remove("dropZonePotential");
-      dropZones[i].classList.remove("dropZoneSelected");
-    }
-  };
   dragZone.ondragleave = (ev) => {
     ev.preventDefault();
     dragZone.classList.remove("dropZoneSelected");
@@ -370,6 +363,13 @@ const createNodeElement = (node, address) => {
       dropZones[i].classList.add("dropZonePotential");
     }
   };
+  root.ondragend = () => {
+    const dropZones = document.getElementsByClassName("dropZone");
+    for (let i = 0;i < dropZones.length; i++) {
+      dropZones[i].classList.remove("dropZonePotential");
+      dropZones[i].classList.remove("dropZoneSelected");
+    }
+  };
   root.onclick = (ev) => {
     ev.stopPropagation();
     const classes = document.getElementsByClassName("selectedNode");
@@ -389,7 +389,6 @@ const createNodeElement = (node, address) => {
     removeAtAddress(currentModel, address);
     update();
   };
-  controlTray.append(delButton);
   const colourButton = document.createElement("input");
   colourButton.type = "color";
   colourButton.value = colour ?? root.style.backgroundColor ?? DEFAULT_COLOUR;
@@ -398,10 +397,11 @@ const createNodeElement = (node, address) => {
     node.value.colour = colourButton.value;
   };
   controlTray.append(colourButton);
+  controlTray.append(delButton);
   const message = promiseTextDisplay(text ?? "", (s) => {
     node.value = {
       ...node.value,
-      text
+      text: s
     };
     update();
   });
