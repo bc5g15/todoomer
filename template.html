@@ -1,5 +1,8 @@
 <html>
     <style>
+        :root {
+            color-scheme: light dark;
+        }
         body {
             background-color: aliceblue;
             color: black;
@@ -10,6 +13,8 @@
             padding-inline: 0.2em;
             margin: 0.2em;
             position: relative;
+            background-color: light-dark(white, black);
+            color: light-dark(black, white);
         }
         .branch {
             padding: 0.2em;

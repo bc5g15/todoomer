@@ -1,5 +1,8 @@
 <html>
     <style>
+        :root {
+            color-scheme: light dark;
+        }
         body {
             background-color: aliceblue;
             color: black;
@@ -10,6 +13,8 @@
             padding-inline: 0.2em;
             margin: 0.2em;
             position: relative;
+            background-color: light-dark(white, black);
+            color: light-dark(black, white);
         }
         .branch {
             padding: 0.2em;
@@ -390,8 +395,6 @@ const DEFAULT_COLUMN_COLOURS = [
   createRandomColour(),
   createRandomColour()
 ];
-const DEFAULT_COLOUR = "#3c5375";
-const DEFAULT_LEAF_COLOUR = "#000000";
 const calculateTextColour = (backgroundColour) => {
   const parseHex = (startIndex, endIndex) => {
     return parseInt(backgroundColour.slice(startIndex, endIndex), 16);
@@ -488,9 +491,7 @@ const createNodeElement = (node, address) => {
   };
   if (node.contents.next === undefined) {
     root.classList.add("leaf");
-    if (!colour) {
-      root.style.backgroundColor = DEFAULT_LEAF_COLOUR;
-    }
+    root.style.removeProperty("background-color");
     const dragZone = createDragZone([...address, 0]);
     dragZone.style.height = "1em";
     const leafAddButton = promiseTextButton(addElement);

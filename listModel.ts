@@ -332,8 +332,6 @@ const createRandomColour = () => {
 
 const DEFAULT_COLUMN_COLOURS = [createRandomColour(),createRandomColour(),createRandomColour(),createRandomColour(),
     createRandomColour(),createRandomColour(),createRandomColour(),createRandomColour()];
-const DEFAULT_COLOUR = '#3c5375';
-const DEFAULT_LEAF_COLOUR = '#000000';
 
 const calculateTextColour = (backgroundColour: string) => {
     const parseHex = (startIndex: number, endIndex: number) => {
@@ -447,9 +445,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     if (node.contents.next === undefined) {
         root.classList.add('leaf');
         // Leaf node, create drag zone that would turn this into a branch
-        if (!colour) {
-            root.style.backgroundColor = DEFAULT_LEAF_COLOUR;
-        }
+        root.style.removeProperty('background-color');
         const dragZone = createDragZone([...address, 0]);
         dragZone.style.height = '1em';
         const leafAddButton = promiseTextButton(addElement);
