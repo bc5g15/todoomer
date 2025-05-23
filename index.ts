@@ -9,4 +9,4 @@ const transpiler = new Bun.Transpiler({
 const result = transpiler.transformSync(tsCode);
 
 const final = template.replace('<!--JS_GOES_HERE-->', result);
-Bun.write('result.html', final);
+Bun.write('todoomer.html', final);
