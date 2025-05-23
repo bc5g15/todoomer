@@ -315,7 +315,10 @@ let currentModel = JSON.parse(localStorage.getItem(MODEL_KEY) ?? JSON.stringify(
     next: undefined
   }
 }));
-let update = () => {
+const saveModel = () => {
+  localStorage.setItem(MODEL_KEY, JSON.stringify(currentModel));
+};
+const update = () => {
   if (currentRoot) {
     document.body.removeChild(currentRoot);
   }
@@ -323,7 +326,7 @@ let update = () => {
   if (currentRoot) {
     document.body.appendChild(currentRoot);
   }
-  localStorage.setItem(MODEL_KEY, JSON.stringify(currentModel));
+  saveModel();
 };
 const createDragZone = (address) => {
   const dragZone = document.createElement("div");
@@ -461,6 +464,7 @@ const createNodeElement = (node, address) => {
     root.style.backgroundColor = colourButton.value;
     node.value.colour = colourButton.value;
     root.style.color = calculateTextColour(colourButton.value);
+    saveModel();
   };
   controlTray.append(colourButton);
   controlTray.append(delButton);
@@ -472,7 +476,7 @@ const createNodeElement = (node, address) => {
       ...node.value,
       text: s
     };
-    update();
+    saveModel();
   });
   titleTextContainer.appendChild(message);
   const addElement = (text) => {

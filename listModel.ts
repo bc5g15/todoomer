@@ -259,7 +259,11 @@ let currentModel:Node = JSON.parse(localStorage.getItem(MODEL_KEY) ?? JSON.strin
     }
 }));
 
-let update = () => {
+const saveModel = () => {
+    localStorage.setItem(MODEL_KEY, JSON.stringify(currentModel))
+}
+
+const update = () => {
     if (currentRoot) {
         document.body.removeChild(currentRoot);
     }
@@ -267,7 +271,7 @@ let update = () => {
     if (currentRoot) {
         document.body.appendChild(currentRoot);
     }
-    localStorage.setItem(MODEL_KEY, JSON.stringify(currentModel))
+    saveModel();
 }
 
 const createDragZone = (address: Address) => {
@@ -315,6 +319,7 @@ document.onkeyup = (ev) => {
     if (!editingText && ev.code === 'Delete') {
         if (selectedNode) {
             removeAtAddress(currentModel, selectedNode);
+            // Could be an 'update-from'
             update();
         }
     }
@@ -401,6 +406,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     delButton.textContent = 'X'
     delButton.onclick = () => {
         removeAtAddress(currentModel, address);
+        // Could be 'update-from'
         update();
     }
 
@@ -411,6 +417,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
         root.style.backgroundColor = colourButton.value;
         node.value.colour = colourButton.value;
         root.style.color = calculateTextColour(colourButton.value);
+        saveModel();
     }
     controlTray.append(colourButton);
     controlTray.append(delButton);
@@ -424,7 +431,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
             ...node.value,
             text: s
         }
-        update();
+        saveModel();
     })
     titleTextContainer.appendChild(message)
 
@@ -434,6 +441,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
             value: { text },
             contents: {startType: true, next: undefined}
         });
+        // Could be 'update-from'
         update();
     }
     if (node.contents.next === undefined) {
@@ -456,6 +464,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     // If we're not a leaf, add the option to fold in this block. 
     const toggleFold = (value: boolean) => {
         node.value.folded = value;
+        // Could be 'update-from'
         update();
     }
     const toggleFoldButton = foldButton(folded ?? false, toggleFold);
