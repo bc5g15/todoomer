@@ -59,6 +59,21 @@
         .selectedNode > .showOnSelected {
             display: block;
         }
+        .foldButton {
+            width: 1em;
+            height: 1em;
+            outline-width: 1px;
+            outline-style: solid;
+            outline-color: darkgoldenrod;
+            background-color: white;
+            color: black;
+            text-align: center;
+            vertical-align: middle;
+            margin: 1em;
+        }
+        .foldButton:hover {
+            outline-width: 2px;
+        }
         @media (prefers-color-scheme: dark) {
             body {
                 background-color: #313336;
@@ -73,6 +88,11 @@
             }
             .leaf {
                 outline: 1px solid gray;
+            }
+            .foldButton {
+                outline-color: palegoldenrod;
+                background-color: black;
+                color: white;
             }
         }
     </style>
@@ -364,8 +384,20 @@ const calculateTextColour = (backgroundColour) => {
   const b = parseHex(5, 7);
   return r * 0.299 + g * 0.587 + b * 0.114 > 186 ? "#000000" : "#FFFFFF";
 };
+const foldButton = (defaultValue, onFold) => {
+  const foldElem = document.createElement("div");
+  foldElem.classList.add("foldButton");
+  let value = defaultValue;
+  foldElem.innerText = value ? ">" : "V";
+  foldElem.onclick = () => {
+    value = !value;
+    foldElem.innerText = value ? ">" : "V";
+    onFold(value);
+  };
+  return foldElem;
+};
 const createNodeElement = (node, address) => {
-  const { text, colour } = node.value ?? {};
+  const { text, colour, folded } = node.value ?? {};
   const root = document.createElement("div");
   root.style.backgroundColor = colour ?? DEFAULT_COLOUR;
   root.style.color = calculateTextColour(root.style.backgroundColor);
@@ -415,6 +447,9 @@ const createNodeElement = (node, address) => {
   };
   controlTray.append(colourButton);
   controlTray.append(delButton);
+  const titleTextContainer = document.createElement("div");
+  titleTextContainer.style.display = "flex";
+  root.append(titleTextContainer);
   const message = promiseTextDisplay(text ?? "", (s) => {
     node.value = {
       ...node.value,
@@ -422,7 +457,7 @@ const createNodeElement = (node, address) => {
     };
     update();
   });
-  root.appendChild(message);
+  titleTextContainer.appendChild(message);
   const addElement = (text) => {
     appendItem(node, {
       value: { text },
@@ -444,6 +479,15 @@ const createNodeElement = (node, address) => {
     return root;
   }
   root.classList.add("branch");
+  const toggleFold = (value) => {
+    node.value.folded = value;
+    update();
+  };
+  const toggleFoldButton = foldButton(folded ?? false, toggleFold);
+  titleTextContainer.append(toggleFoldButton);
+  if (folded) {
+    return root;
+  }
   const container = document.createElement("div");
   let i = 0;
   let n = node.contents.next;

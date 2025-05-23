@@ -59,6 +59,21 @@
         .selectedNode > .showOnSelected {
             display: block;
         }
+        .foldButton {
+            width: 1em;
+            height: 1em;
+            outline-width: 1px;
+            outline-style: solid;
+            outline-color: darkgoldenrod;
+            background-color: white;
+            color: black;
+            text-align: center;
+            vertical-align: middle;
+            margin: 1em;
+        }
+        .foldButton:hover {
+            outline-width: 2px;
+        }
         @media (prefers-color-scheme: dark) {
             body {
                 background-color: #313336;
@@ -73,6 +88,11 @@
             }
             .leaf {
                 outline: 1px solid gray;
+            }
+            .foldButton {
+                outline-color: palegoldenrod;
+                background-color: black;
+                color: white;
             }
         }
     </style>

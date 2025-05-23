@@ -62,8 +62,9 @@ const promiseTextDisplay = (textValue: string, handleText: (s: string) => void) 
 // }
 
 type NodeValue = {
-    text: string,
-    colour?: string 
+    text: string;
+    colour?: string;
+    folded?: boolean; 
 };
 
 type Node = {
@@ -335,8 +336,21 @@ const calculateTextColour = (backgroundColour: string) => {
     return (r*0.299+g*0.587+b*0.114) > 186 ? '#000000' : '#FFFFFF'
 }
 
+const foldButton = (defaultValue: boolean, onFold: (value: boolean) => void) => {
+    const foldElem = document.createElement('div');
+    foldElem.classList.add('foldButton');
+    let value = defaultValue;
+    foldElem.innerText = value ? '>' : 'V';
+    foldElem.onclick = () => {
+        value = !value;
+        foldElem.innerText = value ? '>' : 'V';
+        onFold(value);
+    }
+    return foldElem;
+}
+
 const createNodeElement = (node: Node, address: Address): HTMLElement => {
-    const { text, colour } = node.value ?? {};
+    const { text, colour, folded } = node.value ?? {};
     const root = document.createElement('div');
     root.style.backgroundColor = colour ?? DEFAULT_COLOUR;
     root.style.color = calculateTextColour(root.style.backgroundColor);
@@ -392,6 +406,10 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     controlTray.append(colourButton);
     controlTray.append(delButton);
 
+    const titleTextContainer = document.createElement('div');
+    titleTextContainer.style.display = 'flex';
+    root.append(titleTextContainer);
+
     const message = promiseTextDisplay((text ?? ''), (s) => {
         node.value = {
             ...node.value,
@@ -399,8 +417,9 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
         }
         update();
     })
-    root.appendChild(message)
-    // Add a button for inserting a new element to this column! 
+    titleTextContainer.appendChild(message)
+
+    // The function for adding a new element to the column, we'll need it below!
     const addElement = (text: string) => {
         appendItem(node, {
             value: { text },
@@ -422,7 +441,21 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
         root.append(dragZone);
         return root;
     }
+    
     root.classList.add('branch');
+
+    // If we're not a leaf, add the option to fold in this block. 
+    const toggleFold = (value: boolean) => {
+        node.value.folded = value;
+        update();
+    }
+    const toggleFoldButton = foldButton(folded ?? false, toggleFold);
+    titleTextContainer.append(toggleFoldButton);
+    if (folded) {
+        // No need to show any of the contents if we're folded. 
+        return root;
+    }
+
     const container = document.createElement('div');
     let i = 0;
     let n: LinkedList<Node> | undefined = node.contents.next;
