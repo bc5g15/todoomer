@@ -320,9 +320,15 @@ document.onkeyup = (ev) => {
     }
 }
 
+const createRandomColour = () => {
+    const v = Math.floor(Math.random() * 16**6).toString(16);
+    return '#' + v.padStart(6, '0');
+}
+
+const DEFAULT_COLUMN_COLOURS = [createRandomColour(),createRandomColour(),createRandomColour(),createRandomColour(),
+    createRandomColour(),createRandomColour(),createRandomColour(),createRandomColour()];
 const DEFAULT_COLOUR = '#3c5375';
 const DEFAULT_LEAF_COLOUR = '#000000';
-
 
 const calculateTextColour = (backgroundColour: string) => {
     const parseHex = (startIndex: number, endIndex: number) => {
@@ -352,8 +358,11 @@ const foldButton = (defaultValue: boolean, onFold: (value: boolean) => void) => 
 const createNodeElement = (node: Node, address: Address): HTMLElement => {
     const { text, colour, folded } = node.value ?? {};
     const root = document.createElement('div');
-    root.style.backgroundColor = colour ?? DEFAULT_COLOUR;
-    root.style.color = calculateTextColour(root.style.backgroundColor);
+    let currentColour = colour ?? DEFAULT_COLUMN_COLOURS[address.length % 8]
+    root.style.backgroundColor = currentColour;
+    if (!node.contents.next !== undefined) {
+        root.style.color = calculateTextColour(currentColour);
+    }
     root.classList.add('selectableNode');
     root.draggable = true;
     // Make the root draggable
@@ -397,7 +406,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
 
     const colourButton = document.createElement('input');
     colourButton.type = 'color';
-    colourButton.value = colour ?? root.style.backgroundColor ?? DEFAULT_COLOUR;
+    colourButton.value = colour ?? currentColour;
     colourButton.onchange = () => {
         root.style.backgroundColor = colourButton.value;
         node.value.colour = colourButton.value;
