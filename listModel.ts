@@ -363,7 +363,7 @@ const createNodeElement = (node: Node, address: Address): HTMLElement => {
     const root = document.createElement('div');
     let currentColour = colour ?? DEFAULT_COLUMN_COLOURS[address.length % 8]
     root.style.backgroundColor = currentColour;
-    if (!node.contents.next !== undefined) {
+    if (colour || node.contents.next !== undefined) {
         root.style.color = calculateTextColour(currentColour);
     }
     root.classList.add('selectableNode');

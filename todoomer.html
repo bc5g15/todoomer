@@ -4,12 +4,13 @@
             color-scheme: light dark;
         }
         body {
-            background-color: aliceblue;
-            color: black;
+            background-color: light-dark(aliceblue, #313336);
+            color: light-dark(black, azure);
             font-family: 'Verdana';
         }
         .leaf {
-            border: 1px solid black;
+            border: 1px solid;
+            border-color: light-dark(black, gray);
             padding-inline: 0.2em;
             margin: 0.2em;
             position: relative;
@@ -37,7 +38,7 @@
             width:fit-content;
         }
         .dropZonePotential { 
-            outline: 1px dashed black;
+            outline: 1px dashed light-dark(black, white);
         }
         .dropZoneSelected {
             background-color: green;
@@ -69,36 +70,20 @@
             height: 1em;
             outline-width: 1px;
             outline-style: solid;
-            outline-color: darkgoldenrod;
-            background-color: white;
-            color: black;
+            outline-color: light-dark(darkgoldenrod, palegoldenrod);
+            background-color: light-dark(white, black);
+            color: light-dark(black, white);
             text-align: center;
             vertical-align: middle;
             margin: 1em;
         }
+        input {
+            font-family: 'Verdana';
+            background-color: light-dark(white, black);
+            color: light-dark(black, white);
+        }
         .foldButton:hover {
             outline-width: 2px;
-        }
-        @media (prefers-color-scheme: dark) {
-            body {
-                background-color: #313336;
-                color: azure;
-            }
-            input {
-                background-color: black;
-                color: whitesmoke;
-            }
-            .dropZonePotential {
-                outline: 1px dashed white;
-            }
-            .leaf {
-                outline: 1px solid gray;
-            }
-            .foldButton {
-                outline-color: palegoldenrod;
-                background-color: black;
-                color: white;
-            }
         }
     </style>
     <head>
@@ -421,7 +406,7 @@ const createNodeElement = (node, address) => {
   const root = document.createElement("div");
   let currentColour = colour ?? DEFAULT_COLUMN_COLOURS[address.length % 8];
   root.style.backgroundColor = currentColour;
-  if (!node.contents.next !== undefined) {
+  if (colour || node.contents.next !== undefined) {
     root.style.color = calculateTextColour(currentColour);
   }
   root.classList.add("selectableNode");
